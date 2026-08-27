@@ -1,6 +1,7 @@
-import Link from 'next/link';
+// layout.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import SidebarNav from './SidebarNav'; // 1. Import komponen navigasi baru
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   async function handleLogout() {
@@ -11,41 +12,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
-      {/* Sidebar dengan efek gradient */}
-      <aside className="w-72 bg-gradient-to-b from-[#15406A] to-[#0A2239] text-white flex flex-col shadow-2xl relative z-10">
-        <div className="p-8 border-b border-white/10 flex items-center space-x-4">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg shadow-blue-900/50">
-            {/* Ikon Logo Dummy - Bisa diganti gambar asli nantinya */}
-            <span className="text-[#15406A] font-black text-xl">B</span>
+    <div className="h-screen w-full flex overflow-hidden bg-[#F4F7F9] font-sans">
+      <aside className="w-72 h-full flex-shrink-0 bg-gradient-to-b from-[#15406A] to-[#0A1F35] text-white flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.15)] relative z-20">
+        <div className="absolute top-0 left-0 w-full h-40 bg-white opacity-5 rounded-br-full pointer-events-none"></div>
+
+        <div className="p-8 border-b border-white/10 flex items-center space-x-4 relative z-10">
+          <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+            <span className="text-white font-black text-2xl drop-shadow-md">B</span>
           </div>
           <div>
-            <h2 className="text-lg font-extrabold tracking-widest text-white">BBPVP</h2>
-            <p className="text-xs text-blue-200 font-medium tracking-wider mt-0.5">MAKASSAR</p>
+            <h2 className="text-xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">BBPVP</h2>
+            <p className="text-xs text-amber-400 font-bold tracking-widest mt-0.5">MAKASSAR</p>
           </div>
         </div>
         
-        <nav className="flex-1 p-6 space-y-3">
-          <Link 
-            href="/admin/database-pegawai"
-            className="flex items-center space-x-3 w-full p-3.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 border-l-4 border-blue-400 shadow-md group"
-          >
-            <svg className="w-5 h-5 text-blue-300 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            <span className="font-semibold tracking-wide">Data Pegawai</span>
-          </Link>
-        </nav>
+        {/* 2. Panggil komponen SidebarNav di sini (menggantikan <nav> lama) */}
+        <SidebarNav />
 
-        <div className="p-6 border-t border-white/10">
+        <div className="p-5 border-t border-white/10 bg-black/10">
           <form action={handleLogout}>
-            <button type="submit" className="flex items-center space-x-3 w-full p-3 text-red-300 hover:text-white transition-all duration-300 rounded-xl hover:bg-red-500/20 group">
-              <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-              <span className="font-medium">Logout Admin</span>
+            <button type="submit" className="flex items-center justify-center space-x-2 w-full p-3.5 text-red-300 hover:text-white hover:bg-red-500 rounded-xl transition-all duration-300 group font-semibold">
+              <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+              <span>Logout Keluar</span>
             </button>
           </form>
         </div>
       </aside>
 
-      <main className="flex-1 p-10 overflow-y-auto">
+      <main className="flex-1 h-full overflow-y-auto scroll-smooth">
         {children}
       </main>
     </div>
