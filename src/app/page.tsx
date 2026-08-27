@@ -12,7 +12,7 @@ export default function Home() {
       </p>
       
       <Link 
-        href="/admin/database-pegawai"
+        href="/admin/data-pegawai"
         className="bg-[#15406A] text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-900 transition shadow-lg"
       >
         Login ke Halaman Admin
