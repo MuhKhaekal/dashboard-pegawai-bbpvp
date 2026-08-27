@@ -201,6 +201,7 @@ export default function FormPegawai() {
                       <option value="Instruktur Ahli Muda">Instruktur Ahli Muda</option>
                       <option value="Instruktur Ahli Pertama">Instruktur Ahli Pertama</option>
                       <option value="Instruktur Mahir">Instruktur Mahir</option>
+                      <option value="Instruktur Penyelia">Instruktur Penyelia</option>
                     </optgroup>
                     <optgroup label="Fungsional Khusus / Tertentu">
                       <option value="Analis Sumber Daya Manusia Aparatur Ahli Muda">Analis SDM Aparatur Ahli Muda</option>
