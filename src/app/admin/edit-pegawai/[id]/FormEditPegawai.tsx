@@ -251,6 +251,7 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                       <option value="Bagian Umum SDMA">-- Bagian Umum SDMA</option>
                       <option value="Bagian Umum Keuangan">-- Bagian Umum Keuangan</option>
                       <option value="Bagian Umum Pengadaaan">-- Bagian Umum Pengadaaan</option>
+                      <option value="Bagian Umum Gudang">-- Bagian Umum Gudang</option>
                     </optgroup>
                     <option value="Bidang Pemberdayaan">Bidang Pemberdayaan</option>
                     <option value="Bidang Penyelenggara">Bidang Penyelenggara</option>

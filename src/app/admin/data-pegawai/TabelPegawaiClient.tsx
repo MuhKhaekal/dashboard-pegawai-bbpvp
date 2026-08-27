@@ -21,7 +21,7 @@ const URUTAN_BIDANG = [
   "Struktural", "Instruktur Non Kejuruan", "Kej. Manufaktur", "Kej. Otomotif", "Kej. Elektronika", 
   "Kej. Listrik", "Kej. Teknik Pendingin", "Kej. Garmen Apparel", "Kej. Adminisitrasi Bisnis dan Manajemen", 
   "Kej. Teknik Las", "Kej. Teknologi Informasi dan Komunikasi", "Kej. Tata Kecantikan", "Kej. Bangunan", 
-  "Kej. Pariwisata", "Bagian Umum", "Bagian Umum SDMA", "Bagian Umum Keuangan", "Bagian Umum Pengadaaan", 
+  "Kej. Pariwisata", "Bagian Umum", "Bagian Umum SDMA", "Bagian Umum Keuangan", "Bagian Umum Pengadaaan", "Bagian Umum Gudang",
   "Bidang Pemberdayaan", "Bidang Penyelenggara", "Bidang Intala dan Uji Coba Program", 
   "LSP", "SATPEL", "Security", "Cleaning Services", "Teknisi", "Driver"
 ];

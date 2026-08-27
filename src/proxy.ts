@@ -22,7 +22,7 @@ export async function proxy(request: NextRequest) {
 
   // ATURAN 1: Cegah admin yang sudah login membuka halaman /login
   if (path === '/login' && isTokenValid) {
-    return NextResponse.redirect(new URL('/admin/database-pegawai', request.url));
+    return NextResponse.redirect(new URL('/admin/data-pegawai', request.url));
   }
 
   // ATURAN 2: Cegah penyusup masuk ke halaman /admin
