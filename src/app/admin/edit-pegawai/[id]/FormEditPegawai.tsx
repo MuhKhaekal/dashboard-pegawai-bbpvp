@@ -5,7 +5,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { updatePegawai } from "../../data-pegawai/actions";
 
-// 1. Tambahkan tipe data Pegawai di sini
+// Tipe data Pegawai (Diperbarui dengan sisa_cuti_tahun_lalu & cuti_tahun_ini)
 export type Pegawai = {
   id: number;
   nama: string;
@@ -18,6 +18,8 @@ export type Pegawai = {
   tmt_jabatan_terakhir: string | null;
   bidang: string;
   status_kepegawaian: string;
+  sisa_cuti_tahun_lalu: number;
+  cuti_tahun_ini: number;
 };
 
 const SelectArrow = () => (
@@ -48,15 +50,17 @@ const formatNipAwal = (nipAsli: string) => {
   return res;
 };
 
-// 2. Ganti 'any' menjadi 'Pegawai'
 export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  // Kalkulasi Tahun Otomatis untuk Cuti
+  const currentYear = new Date().getFullYear();
+  const lastYear = currentYear - 1;
+
   const [nip, setNip] = useState(formatNipAwal(pegawai.nip));
 
-  // Konversi string database kembali menjadi objek Date untuk kalender
   const [tglLahir, setTglLahir] = useState<Date | null>(pegawai.tanggal_lahir ? new Date(pegawai.tanggal_lahir) : null);
   const [tmtPangkat, setTmtPangkat] = useState<Date | null>(pegawai.tmt_pangkat_terakhir ? new Date(pegawai.tmt_pangkat_terakhir) : null);
   const [tmtJabatan, setTmtJabatan] = useState<Date | null>(pegawai.tmt_jabatan_terakhir ? new Date(pegawai.tmt_jabatan_terakhir) : null);
@@ -86,8 +90,8 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
   return (
     <>
       {showModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl scale-100 animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl scale-100 animate-in zoom-in-95 duration-300 relative z-[70]">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
               <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
@@ -105,37 +109,39 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
       <style>{`
         .react-datepicker-wrapper { width: 100%; }
         .react-datepicker__input-container input { width: 100%; }
-        .react-datepicker-popper { z-index: 9999 !important; }
+        .react-datepicker-popper { z-index: 40 !important; }
       `}</style>
 
       <div className="bg-white p-8 md:p-10 rounded-[2rem] shadow-xl border border-gray-100">
         <form action={onSubmit} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
+            
+            {/* ----------------- KOLOM KIRI ----------------- */}
             <div className="space-y-6">
-              <div className="relative z-[70]">
+              <div className="transform transition-all duration-300 focus-within:-translate-y-1">
                 <label className={labelClass}>Nama Lengkap & Gelar</label>
                 <input type="text" name="nama" defaultValue={pegawai.nama} required className={inputClass} />
               </div>
 
-              <div className="relative z-[65]">
+              <div className="transform transition-all duration-300 focus-within:-translate-y-1">
                 <label className={labelClass}>NIP</label>
                 <input type="text" name="nip" value={nip} onChange={handleNipChange} maxLength={21} required className={`${inputClass} font-mono tracking-wider`} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="relative z-[60]">
+                <div className="transform transition-all duration-300 focus-within:-translate-y-1">
                   <label className={labelClass}>Tempat Lahir</label>
                   <input type="text" name="tempat_lahir" defaultValue={pegawai.tempat_lahir || ""} required className={inputClass} />
                 </div>
 
-                <div className="relative z-[60]">
+                <div className="relative z-20 transform transition-all duration-300 focus-within:-translate-y-1">
                   <label className={labelClass}>Tanggal Lahir</label>
                   <DatePicker selected={tglLahir} onChange={(date: Date | null) => setTglLahir(date)} dateFormat="dd/MM/yyyy" className={inputClass} required showMonthDropdown showYearDropdown dropdownMode="select" />
                   <input type="hidden" name="tanggal_lahir" value={formatForDB(tglLahir)} />
                 </div>
               </div>
 
-              <div className="relative z-[55]">
+              <div className="transform transition-all duration-300 focus-within:-translate-y-1">
                 <label className={labelClass}>Pangkat / Golongan</label>
                 <div className={selectWrapperClass}>
                   <select name="pangkat_golongan" defaultValue={pegawai.pangkat_golongan} className={selectClass} required>
@@ -179,15 +185,28 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                 </div>
               </div>
 
-              <div className="relative z-[50]">
-                <label className={labelClass}>TMT Pangkat Terakhir</label>
-                <DatePicker selected={tmtPangkat} onChange={(date: Date | null) => setTmtPangkat(date)} dateFormat="dd/MM/yyyy" className={inputClass} required showMonthDropdown showYearDropdown dropdownMode="select" />
+              <div className="relative z-10 transform transition-all duration-300 focus-within:-translate-y-1">
+                <label className={labelClass}>
+                  TMT Pangkat Terakhir <span className="text-gray-400 font-normal text-[11px] ml-1">(Opsional)</span>
+                </label>
+                <DatePicker 
+                  selected={tmtPangkat} 
+                  onChange={(date: Date | null) => setTmtPangkat(date)} 
+                  dateFormat="dd/MM/yyyy" 
+                  placeholderText="Boleh dikosongkan..."
+                  className={inputClass} 
+                  showMonthDropdown 
+                  showYearDropdown 
+                  dropdownMode="select" 
+                  isClearable 
+                />
                 <input type="hidden" name="tmt_pangkat_terakhir" value={formatForDB(tmtPangkat)} />
               </div>
             </div>
 
+            {/* ----------------- KOLOM KANAN ----------------- */}
             <div className="space-y-6">
-              <div className="relative z-[45]">
+              <div className="transform transition-all duration-300 focus-within:-translate-y-1">
                 <label className={labelClass}>Jabatan</label>
                 <div className={selectWrapperClass}>
                   <select name="jabatan" defaultValue={pegawai.jabatan} className={selectClass} required>
@@ -234,13 +253,25 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                 </div>
               </div>
 
-              <div className="relative z-[40]">
-                <label className={labelClass}>TMT Jabatan Terakhir</label>
-                <DatePicker selected={tmtJabatan} onChange={(date: Date | null) => setTmtJabatan(date)} dateFormat="dd/MM/yyyy" className={inputClass} required showMonthDropdown showYearDropdown dropdownMode="select" />
+              <div className="relative z-0 transform transition-all duration-300 focus-within:-translate-y-1">
+                <label className={labelClass}>
+                  TMT Jabatan Terakhir <span className="text-gray-400 font-normal text-[11px] ml-1">(Opsional)</span>
+                </label>
+                <DatePicker 
+                  selected={tmtJabatan} 
+                  onChange={(date: Date | null) => setTmtJabatan(date)} 
+                  dateFormat="dd/MM/yyyy" 
+                  placeholderText="Boleh dikosongkan..."
+                  className={inputClass} 
+                  showMonthDropdown 
+                  showYearDropdown 
+                  dropdownMode="select" 
+                  isClearable 
+                />
                 <input type="hidden" name="tmt_jabatan_terakhir" value={formatForDB(tmtJabatan)} />
               </div>
 
-              <div className="relative z-[35]">
+              <div className="transform transition-all duration-300 focus-within:-translate-y-1">
                 <label className={labelClass}>Bidang / Unit Kerja</label>
                 <div className={selectWrapperClass}>
                   <select name="bidang" defaultValue={pegawai.bidang} className={selectClass} required>
@@ -268,7 +299,14 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                     <option value="Bidang Penyelenggara">Bidang Penyelenggara</option>
                     <option value="Bidang Intala dan Uji Coba Program">Bidang Intala dan Uji Coba Program</option>
                     <option value="LSP">LSP</option>
-                    <option value="SATPEL">SATPEL</option>
+                    
+                    <optgroup label="Satuan Pelayanan (SATPEL)">
+                      <option value="SATPEL">-- SATPEL (Belum Spesifik)</option>
+                      <option value="SATPEL Mamuju">-- SATPEL Mamuju</option>
+                      <option value="SATPEL Majene">-- SATPEL Majene</option>
+                      <option value="SATPEL Palu">-- SATPEL Palu</option>
+                    </optgroup>
+
                     <option value="Security">Security</option>
                     <option value="Cleaning Services">Cleaning Services</option>
                     <option value="Teknisi">Teknisi</option>
@@ -278,7 +316,7 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                 </div>
               </div>
 
-              <div className="relative z-[30]">
+              <div className="transform transition-all duration-300 focus-within:-translate-y-1">
                 <label className={labelClass}>Status Kepegawaian</label>
                 <div className={selectWrapperClass}>
                   <select name="status_kepegawaian" defaultValue={pegawai.status_kepegawaian} className={selectClass} required>
@@ -289,14 +327,28 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                   <SelectArrow />
                 </div>
               </div>
+
+              {/* INPUT SISA CUTI & CUTI TAHUN INI */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="transform transition-all duration-300 focus-within:-translate-y-1">
+                  <label className={labelClass}>Sisa Cuti Thn {lastYear}</label>
+                  <input type="number" name="sisa_cuti_tahun_lalu" defaultValue={pegawai.sisa_cuti_tahun_lalu} min="0" placeholder="Contoh: 3" className={inputClass} />
+                </div>
+
+                <div className="transform transition-all duration-300 focus-within:-translate-y-1">
+                  <label className={labelClass}>Cuti Thn {currentYear}</label>
+                  <input type="number" name="cuti_tahun_ini" defaultValue={pegawai.cuti_tahun_ini} min="0" placeholder="Contoh: 12" className={inputClass} />
+                </div>
+              </div>
+
             </div>
           </div>
 
-          <div className="flex justify-between items-center pt-8 border-t border-gray-100">
+          <div className="flex justify-between items-center pt-8 border-t border-gray-100 mt-8">
             <button type="button" onClick={() => router.push("/admin/data-pegawai")} className="px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors">
               Batal
             </button>
-            <button type="submit" disabled={isSubmitting} className="px-10 py-4 bg-gradient-to-r from-[#15406A] to-[#215d9c] text-white font-bold rounded-xl shadow-lg hover:-translate-y-1 transition-transform">
+            <button type="submit" disabled={isSubmitting} className="px-10 py-4 bg-gradient-to-r from-[#15406A] to-[#215d9c] text-white font-bold rounded-xl shadow-lg hover:-translate-y-1 transition-transform disabled:opacity-70">
               {isSubmitting ? "Memperbarui..." : "Perbarui Data Pegawai"}
             </button>
           </div>
