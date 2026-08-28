@@ -164,6 +164,16 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                       <option value="IV/d: Pembina Utama Madya">IV/d: Pembina Utama Madya</option>
                       <option value="IV/e: Pembina Utama">IV/e: Pembina Utama</option>
                     </optgroup>
+                    <optgroup label="Golongan PPPK">
+                      <option value="I">I</option>
+                      <option value="IV">IV</option>
+                      <option value="V">V</option>
+                      <option value="VI">VI</option>
+                      <option value="VII">VII</option>
+                      <option value="IX">IX</option>
+                      <option value="X">X</option>
+                      <option value="XI">XI</option>
+                    </optgroup>
                   </select>
                   <SelectArrow />
                 </div>
