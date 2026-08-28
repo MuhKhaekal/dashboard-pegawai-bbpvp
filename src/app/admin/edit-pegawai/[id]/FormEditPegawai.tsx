@@ -115,7 +115,6 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
       <div className="bg-white p-8 md:p-10 rounded-[2rem] shadow-xl border border-gray-100">
         <form action={onSubmit} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
-            
             {/* ----------------- KOLOM KIRI ----------------- */}
             <div className="space-y-6">
               <div className="transform transition-all duration-300 focus-within:-translate-y-1">
@@ -145,6 +144,7 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                 <label className={labelClass}>Pangkat / Golongan</label>
                 <div className={selectWrapperClass}>
                   <select name="pangkat_golongan" defaultValue={pegawai.pangkat_golongan} className={selectClass} required>
+                    <option value="-">-</option>
                     <optgroup label="Golongan I (Juru)">
                       <option value="I/a: Juru Muda">I/a: Juru Muda</option>
                       <option value="I/b: Juru Muda Tingkat I">I/b: Juru Muda Tingkat I</option>
@@ -189,16 +189,16 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                 <label className={labelClass}>
                   TMT Pangkat Terakhir <span className="text-gray-400 font-normal text-[11px] ml-1">(Opsional)</span>
                 </label>
-                <DatePicker 
-                  selected={tmtPangkat} 
-                  onChange={(date: Date | null) => setTmtPangkat(date)} 
-                  dateFormat="dd/MM/yyyy" 
+                <DatePicker
+                  selected={tmtPangkat}
+                  onChange={(date: Date | null) => setTmtPangkat(date)}
+                  dateFormat="dd/MM/yyyy"
                   placeholderText="Boleh dikosongkan..."
-                  className={inputClass} 
-                  showMonthDropdown 
-                  showYearDropdown 
-                  dropdownMode="select" 
-                  isClearable 
+                  className={inputClass}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  isClearable
                 />
                 <input type="hidden" name="tmt_pangkat_terakhir" value={formatForDB(tmtPangkat)} />
               </div>
@@ -210,6 +210,7 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                 <label className={labelClass}>Jabatan</label>
                 <div className={selectWrapperClass}>
                   <select name="jabatan" defaultValue={pegawai.jabatan} className={selectClass} required>
+                    <option value="-">-</option>
                     <optgroup label="Struktural / Pimpinan">
                       <option value="Kepala BBPVP Makassar">Kepala BBPVP Makassar</option>
                       <option value="Kabag Umum">Kabag Umum</option>
@@ -257,16 +258,16 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                 <label className={labelClass}>
                   TMT Jabatan Terakhir <span className="text-gray-400 font-normal text-[11px] ml-1">(Opsional)</span>
                 </label>
-                <DatePicker 
-                  selected={tmtJabatan} 
-                  onChange={(date: Date | null) => setTmtJabatan(date)} 
-                  dateFormat="dd/MM/yyyy" 
+                <DatePicker
+                  selected={tmtJabatan}
+                  onChange={(date: Date | null) => setTmtJabatan(date)}
+                  dateFormat="dd/MM/yyyy"
                   placeholderText="Boleh dikosongkan..."
-                  className={inputClass} 
-                  showMonthDropdown 
-                  showYearDropdown 
-                  dropdownMode="select" 
-                  isClearable 
+                  className={inputClass}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  isClearable
                 />
                 <input type="hidden" name="tmt_jabatan_terakhir" value={formatForDB(tmtJabatan)} />
               </div>
@@ -275,6 +276,7 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                 <label className={labelClass}>Bidang / Unit Kerja</label>
                 <div className={selectWrapperClass}>
                   <select name="bidang" defaultValue={pegawai.bidang} className={selectClass} required>
+                    <option value="-">-</option>
                     <option value="Struktural">Struktural</option>
                     <option value="Instruktur Non Kejuruan">Instruktur Non Kejuruan</option>
                     <option value="Kej. Manufaktur">Kej. Manufaktur</option>
@@ -299,7 +301,7 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                     <option value="Bidang Penyelenggara">Bidang Penyelenggara</option>
                     <option value="Bidang Intala dan Uji Coba Program">Bidang Intala dan Uji Coba Program</option>
                     <option value="LSP">LSP</option>
-                    
+
                     <optgroup label="Satuan Pelayanan (SATPEL)">
                       <option value="SATPEL">-- SATPEL (Belum Spesifik)</option>
                       <option value="SATPEL Mamuju">-- SATPEL Mamuju</option>
@@ -340,7 +342,6 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                   <input type="number" name="cuti_tahun_ini" defaultValue={pegawai.cuti_tahun_ini} min="0" placeholder="Contoh: 12" className={inputClass} />
                 </div>
               </div>
-
             </div>
           </div>
 

@@ -101,7 +101,6 @@ export default function FormPegawai() {
       <div className="bg-white p-8 md:p-10 rounded-[2rem] shadow-xl border border-gray-100">
         <form ref={formRef} action={onSubmit} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
-            
             {/* ----------------- KOLOM KIRI ----------------- */}
             <div className="space-y-6">
               <div className="transform transition-all duration-300 focus-within:-translate-y-1">
@@ -142,6 +141,7 @@ export default function FormPegawai() {
                 <label className={labelClass}>Pangkat / Golongan</label>
                 <div className={selectWrapperClass}>
                   <select name="pangkat_golongan" className={selectClass} required>
+                    <option value="-">-</option>
                     <optgroup label="Golongan I (Juru)">
                       <option value="I/a: Juru Muda">I/a: Juru Muda</option>
                       <option value="I/b: Juru Muda Tingkat I">I/b: Juru Muda Tingkat I</option>
@@ -208,6 +208,7 @@ export default function FormPegawai() {
                 <label className={labelClass}>Jabatan</label>
                 <div className={selectWrapperClass}>
                   <select name="jabatan" className={selectClass} required>
+                    <option value="-">-</option>
                     <optgroup label="Struktural / Pimpinan">
                       <option value="Kepala BBPVP Makassar">Kepala BBPVP Makassar</option>
                       <option value="Kabag Umum">Kabag Umum</option>
@@ -274,6 +275,7 @@ export default function FormPegawai() {
                 <label className={labelClass}>Bidang / Unit Kerja</label>
                 <div className={selectWrapperClass}>
                   <select name="bidang" className={selectClass} required>
+                    <option value="-">-</option>
                     <option value="Struktural">Struktural</option>
                     <option value="Instruktur Non Kejuruan">Instruktur Non Kejuruan</option>
                     <option value="Kej. Manufaktur">Kej. Manufaktur</option>
@@ -298,7 +300,7 @@ export default function FormPegawai() {
                     <option value="Bidang Penyelenggara">Bidang Penyelenggara</option>
                     <option value="Bidang Intala dan Uji Coba Program">Bidang Intala dan Uji Coba Program</option>
                     <option value="LSP">LSP</option>
-                    
+
                     {/* SATPEL INDUK & SUB-SATPEL */}
                     <option value="SATPEL">SATPEL (Induk)</option>
                     <optgroup label="Satuan Pelayanan Spesifik">
@@ -340,7 +342,6 @@ export default function FormPegawai() {
                   <input type="number" name="cuti_tahun_ini" min="0" placeholder="Contoh: 12" className={inputClass} />
                 </div>
               </div>
-
             </div>
           </div>
 

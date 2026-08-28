@@ -15,6 +15,8 @@ export type Pegawai = {
   tmt_jabatan_terakhir: string | null;
   bidang: string;
   status_kepegawaian: string;
+  sisa_cuti_tahun_lalu: number;
+  cuti_tahun_ini: number;
 };
 
 const URUTAN_BIDANG = [
@@ -36,18 +38,16 @@ function formatTanggal(dateString: string | null) {
 function hitungMasaPensiun(tanggalLahir: string | null, jabatan: string, status: string) {
   if (!tanggalLahir) return { batasUmur: 0, sisaTeks: 'Data TTL Kosong', isPensiun: false, warna: 'bg-gray-100 text-gray-600' };
 
-  // 1. Tentukan Batas Umur berdasarkan Aturan
-  let batasUmur = 58; // Default: Admin, Pertama, Muda, Keterampilan, PPPK
+  let batasUmur = 58; 
   
   if (status !== 'PPPK') {
     if (jabatan.includes('Utama')) {
-      batasUmur = 65; // Ahli Utama, Dosen
+      batasUmur = 65; 
     } else if (jabatan.includes('Madya') || jabatan === 'Kepala BBPVP Makassar') {
-      batasUmur = 60; // Pimpinan Tinggi, Madya, Guru
+      batasUmur = 60; 
     }
   }
 
-  // 2. Kalkulasi Tanggal Pensiun dan Sisa Waktu
   const tglLahirDate = new Date(tanggalLahir);
   const tglPensiun = new Date(tglLahirDate.getFullYear() + batasUmur, tglLahirDate.getMonth(), tglLahirDate.getDate());
   const now = new Date();
@@ -69,7 +69,6 @@ function hitungMasaPensiun(tanggalLahir: string | null, jabatan: string, status:
   if (sisaBulan > 0) sisaTeks += `${sisaBulan} Bln`;
   if (sisaTeks === '') sisaTeks = '< 1 Bln';
 
-  // Warning warna jika sisa waktu kurang dari 1 tahun
   const warna = sisaTahun < 1 ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
 
   return { batasUmur, sisaTeks: sisaTeks.trim(), isPensiun: false, warna };
@@ -133,7 +132,7 @@ export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
         </div>
       )}
 
-      {/* TABEL UTAMA (COMPACT DESIGN) */}
+      {/* TABEL UTAMA */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         
         <div className="p-5 border-b border-gray-100 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
@@ -165,6 +164,7 @@ export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
                 <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Identitas Pegawai</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Kepangkatan & Jabatan</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Lahir & Status</th>
+                <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Informasi Cuti</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Sisa Masa Jabatan</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
               </tr>
@@ -173,13 +173,15 @@ export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
             <tbody className="bg-white">
               {sortedBidangKeys.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-10 text-sm text-gray-500">Data tidak ditemukan.</td>
+                  {/* Kolom diperbarui menjadi 6 karena ada tambahan kolom Cuti */}
+                  <td colSpan={6} className="text-center py-10 text-sm text-gray-500">Data tidak ditemukan.</td>
                 </tr>
               ) : (
                 sortedBidangKeys.map((bidang) => (
                   <React.Fragment key={bidang}>
                     <tr className="bg-[#f4f7fa] border-y border-gray-200">
-                      <td colSpan={5} className="px-4 py-2">
+                      {/* Kolom diperbarui menjadi 6 */}
+                      <td colSpan={6} className="px-4 py-2">
                         <div className="flex items-center space-x-2">
                           <span className="w-4 h-4 rounded bg-[#15406A] text-white flex items-center justify-center">
                             <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd"></path></svg>
@@ -191,13 +193,15 @@ export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
                     </tr>
 
                     {groupedData[bidang].map((p: Pegawai, index: number) => {
-                      // Kalkulasi data pensiun per baris
                       const pensiun = hitungMasaPensiun(p.tanggal_lahir, p.jabatan, p.status_kepegawaian);
+                      const sisaLalu = p.sisa_cuti_tahun_lalu || 0;
+                      const tahunIni = p.cuti_tahun_ini || 0;
+                      const totalCuti = sisaLalu + tahunIni;
 
                       return (
                         <tr key={p.id} className={`group border-b border-gray-100 hover:bg-blue-50/40 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
                           
-                          {/* KOLOM 1: IDENTITAS (Padding diperkecil, text lebih rapat) */}
+                          {/* KOLOM 1: IDENTITAS */}
                           <td className="px-4 py-2.5 align-top">
                             <div className="flex flex-col leading-tight">
                               <span className="text-sm font-bold text-gray-900 group-hover:text-[#15406A]">{p.nama}</span>
@@ -206,7 +210,7 @@ export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
                             </div>
                           </td>
 
-                          {/* KOLOM 2: PANGKAT & JABATAN TERLENGKAP */}
+                          {/* KOLOM 2: PANGKAT & JABATAN */}
                           <td className="px-4 py-2.5 align-top">
                             <div className="flex flex-col leading-tight space-y-1.5">
                               <div>
@@ -239,7 +243,22 @@ export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
                             </div>
                           </td>
 
-                          {/* KOLOM 4: MASA PENSIUN (SMART CALCULATION) */}
+                          {/* KOLOM 4: INFORMASI CUTI (FITUR BARU) */}
+                          <td className="px-4 py-2.5 align-top text-center">
+                             <div className="flex flex-col items-center justify-center space-y-1.5 h-full">
+                                <div className="text-[10px] font-medium text-gray-500 flex items-center space-x-2">
+                                  <span title="Sisa Cuti Tahun Lalu">Lalu: <strong className="text-gray-800">{sisaLalu}</strong></span>
+                                  <span className="text-gray-300">|</span>
+                                  <span title="Cuti Tahun Ini">Kini: <strong className="text-gray-800">{tahunIni}</strong></span>
+                                </div>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-bold border shadow-sm
+                                  ${totalCuti === 0 ? 'bg-gray-100 text-gray-500 border-gray-200' : 'bg-purple-50 text-purple-700 border-purple-200'}`}>
+                                  Total: {totalCuti} Hari
+                                </span>
+                             </div>
+                          </td>
+
+                          {/* KOLOM 5: MASA PENSIUN */}
                           <td className="px-4 py-2.5 align-top text-center">
                             <div className="flex flex-col items-center justify-center h-full space-y-1">
                                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
@@ -251,7 +270,7 @@ export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
                             </div>
                           </td>
 
-                          {/* KOLOM 5: AKSI */}
+                          {/* KOLOM 6: AKSI */}
                           <td className="px-4 py-2.5 align-middle text-right">
                              <div className="flex justify-end gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200">
                                <Link href={`/admin/edit-pegawai/${p.id}`} className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded border border-blue-100 transition-colors tooltip" title="Edit Data">
