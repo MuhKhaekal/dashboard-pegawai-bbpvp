@@ -1,7 +1,6 @@
-// layout.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import SidebarNav from './SidebarNav'; // 1. Import komponen navigasi baru
+import SidebarNav from './SidebarNav';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   async function handleLogout() {
@@ -12,21 +11,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="h-screen w-full flex overflow-hidden bg-[#F4F7F9] font-sans">
-      <aside className="w-72 h-full flex-shrink-0 bg-gradient-to-b from-[#15406A] to-[#0A1F35] text-white flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.15)] relative z-20">
+    <div className="h-screen w-full flex overflow-hidden bg-[#F4F7F9] font-sans relative ">
+      
+      {/* 1. CHECKBOX HACK UNTUK TOGGLE MOBILE */}
+      <input type="checkbox" id="mobile-menu" className="peer hidden" />
+      
+      {/* 2. OVERLAY GELAP (Muncul saat sidebar terbuka di HP) */}
+      <label 
+        htmlFor="mobile-menu" 
+        className="fixed inset-0 bg-black/60 z-40 hidden peer-checked:block lg:hidden backdrop-blur-sm transition-opacity"
+      ></label>
+
+      {/* 3. SIDEBAR (Disembunyikan di luar layar pada mobile, muncul saat peer-checked) */}
+      <aside className="fixed inset-y-0 left-0 z-50 w-72 h-full flex-shrink-0 bg-gradient-to-b from-[#15406A] to-[#0A1F35] text-white flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.15)] transform -translate-x-full peer-checked:translate-x-0 lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out">
         <div className="absolute top-0 left-0 w-full h-40 bg-white opacity-5 rounded-br-full pointer-events-none"></div>
 
-        <div className="p-8 border-b border-white/10 flex items-center space-x-4 relative z-10">
-          <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
-            <span className="text-white font-black text-2xl drop-shadow-md">B</span>
+        {/* Header Sidebar */}
+        <div className="p-6 lg:p-8 border-b border-white/10 flex items-center justify-between relative z-10">
+          <div className="flex items-center space-x-3 lg:space-x-4">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+              <span className="text-white font-black text-xl lg:text-2xl drop-shadow-md">B</span>
+            </div>
+            <div>
+              <h2 className="text-lg lg:text-xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">BBPVP</h2>
+              <p className="text-[10px] lg:text-xs text-amber-400 font-bold tracking-widest mt-0.5">MAKASSAR</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">BBPVP</h2>
-            <p className="text-xs text-amber-400 font-bold tracking-widest mt-0.5">MAKASSAR</p>
-          </div>
+          
+          {/* Tombol Silang (Close) Khusus Mobile */}
+          <label htmlFor="mobile-menu" className="lg:hidden p-2 bg-white/10 rounded-lg cursor-pointer hover:bg-white/20 transition-colors">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </label>
         </div>
         
-        {/* 2. Panggil komponen SidebarNav di sini (menggantikan <nav> lama) */}
         <SidebarNav />
 
         <div className="p-5 border-t border-white/10 bg-black/10">
@@ -39,9 +56,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <main className="flex-1 h-full overflow-y-auto scroll-smooth">
-        {children}
-      </main>
+      {/* 4. MAIN CONTENT AREA (Area Utama) */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden w-full relative">
+        
+        {/* MOBILE HEADER (Hanya muncul di layar kecil) */}
+        <header className="lg:hidden bg-white shadow-sm border-b border-gray-200 px-5 py-4 flex items-center justify-between sticky top-0 z-30">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#15406A] to-blue-800 rounded-lg flex items-center justify-center shadow-sm">
+              <span className="text-white font-bold text-sm">B</span>
+            </div>
+            <h1 className="font-bold text-gray-800 text-sm">BBPVP Makassar</h1>
+          </div>
+          
+          {/* Tombol Hamburger untuk membuka Sidebar */}
+          <label htmlFor="mobile-menu" className="p-2 -mr-2 bg-gray-50 text-[#15406A] rounded-lg cursor-pointer hover:bg-gray-200 transition-colors border border-gray-100 shadow-sm">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </label>
+        </header>
+
+        <main className="flex-1 overflow-y-auto scroll-smooth">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

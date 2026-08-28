@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         path: "/",
       });
 
-      redirect("/admin/data-pegawai");
+      redirect("/admin");
     } else {
       redirect("/login?error=1");
     }
