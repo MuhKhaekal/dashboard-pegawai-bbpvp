@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import Link from "next/link";
+
 
 export const revalidate = 0;
 
@@ -208,13 +208,9 @@ export default async function DashboardPage() {
             <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
             <span>Live Data</span>
           </div>
-          <h1 className="text-3xl lg:text-4xl font-black text-[#15406A] tracking-tight">Executive Dashboard</h1>
+          <h1 className="text-3xl lg:text-4xl font-black text-[#15406A] tracking-tight">Dashboard</h1>
           <p className="text-gray-500 mt-1 lg:mt-2 font-medium text-sm lg:text-base">Platform Analisis Cerdas SDM BBPVP Makassar.</p>
         </div>
-        <Link href="/admin/tambah-pegawai" className="inline-flex items-center justify-center space-x-2 bg-[#15406A] hover:bg-blue-900 text-white px-5 py-3 lg:px-6 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all text-sm lg:text-base w-full sm:w-auto">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
-          <span>Input Data Baru</span>
-        </Link>
       </div>
 
       {/* BARIS 1: 5 KARTU METRIK UTAMA (Diperbarui) */}

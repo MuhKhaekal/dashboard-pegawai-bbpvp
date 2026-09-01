@@ -9,6 +9,7 @@ export default function SidebarNav() {
   const isDashboardActive = pathname === '/admin';
   const isDataPegawaiActive = pathname.startsWith('/admin/data-pegawai') || pathname.startsWith('/admin/edit-pegawai');
   const isTambahPegawaiActive = pathname.startsWith('/admin/tambah-pegawai');
+  const isManajemenCutiActive = pathname.startsWith('/admin/manajemen-cuti'); // Tambahan rute baru
 
   // Fungsi untuk menutup sidebar secara otomatis di Mobile
   const handleMenuClick = () => {
@@ -49,18 +50,19 @@ export default function SidebarNav() {
         <span className="font-bold tracking-wide text-sm lg:text-base">Data Pegawai</span>
       </Link>
       
-      {/* MENU 2: TAMBAH DATA */}
+
+      {/* MENU 3: MANAJEMEN CUTI */}
       <Link 
-        href="/admin/tambah-pegawai" 
+        href="/admin/manajemen-cuti" 
         onClick={handleMenuClick}
         className={`flex items-center space-x-3 w-full p-3.5 lg:p-4 rounded-xl transition-all duration-300 border-l-4 shadow-sm group ${
-          isTambahPegawaiActive 
+          isManajemenCutiActive 
             ? 'bg-white/20 border-amber-400 text-white' 
             : 'bg-white/5 border-transparent hover:border-amber-400 hover:bg-white/20 text-gray-300'
         }`}
       >
-        <svg className={`w-5 h-5 transition-colors ${isTambahPegawaiActive ? 'text-amber-400' : 'text-blue-300 group-hover:text-amber-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
-        <span className="font-bold tracking-wide text-sm lg:text-base">Tambah Pegawai</span>
+        <svg className={`w-5 h-5 transition-colors ${isManajemenCutiActive ? 'text-amber-400' : 'text-blue-300 group-hover:text-amber-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        <span className="font-bold tracking-wide text-sm lg:text-base">Manajemen Cuti</span>
       </Link>
       
     </nav>

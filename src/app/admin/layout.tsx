@@ -32,13 +32,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 src="/logo-bbpvp.png"
                 alt="Logo BBPVP Makassar"
                 className="w-full h-full object-contain"
-
-                /* CATATAN: 
-                   Jika Anda TIDAK INGIN menggunakan kotak background putih dan lebih suka
-                   logonya langsung menempel tapi berubah warna menjadi PUTIH polos,
-                   hapus tulisan 'bg-white' di atas, lalu tambahkan class ini di dalam img:
-                   className="w-full h-full object-contain brightness-0 invert" 
-                */
               />
             </div>
 
