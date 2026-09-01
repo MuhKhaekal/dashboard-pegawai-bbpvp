@@ -155,16 +155,17 @@ export async function hapusPegawai(id: number) {
 }
 
 // ==========================================
-// B. CUTI TAHUNAN
+// B. SIMPAN / EDIT CUTI TAHUNAN
 // ==========================================
 
 export async function simpanCutiTahunan(
   pegawaiId: number,
   bulanAngka: number,
   tahun: number,
-  durasi: number
+  durasiBaru: number,
+  keterangan = ""
 ) {
-  if (!Number.isInteger(durasi) || durasi <= 0) {
+  if (!Number.isInteger(durasiBaru) || durasiBaru <= 0) {
     return {
       success: false,
       message: "Durasi harus lebih dari 0.",
@@ -183,82 +184,127 @@ export async function simpanCutiTahunan(
   }
 
   try {
-    const pRows = await sql`
-      SELECT
-        sisa_cuti_tahun_lalu,
-        cuti_tahun_ini
-      FROM data_pegawai
-      WHERE id = ${pegawaiId}
-    `;
+    const result = await sql.transaction([
+      sql`
+        SELECT
+          sisa_cuti_tahun_lalu,
+          cuti_tahun_ini
+        FROM data_pegawai
+        WHERE id = ${pegawaiId}
+        FOR UPDATE
+      `,
 
-    if (pRows.length === 0) {
+      sql`
+        SELECT
+          COALESCE(SUM(durasi), 0) AS total_durasi
+        FROM leave_records
+        WHERE
+          pegawai_id = ${pegawaiId}
+          AND jenis_cuti = 'Tahunan'
+          AND bulan_angka = ${bulanAngka}
+          AND tahun = ${tahun}
+      `,
+    ]);
+
+    const pegawaiRows = result[0] as Array<{
+      sisa_cuti_tahun_lalu: number;
+      cuti_tahun_ini: number;
+    }>;
+
+    const existingRows = result[1] as Array<{
+      total_durasi: number;
+    }>;
+
+    if (pegawaiRows.length === 0) {
       throw new Error("Pegawai tidak ditemukan.");
     }
 
     const quotaLalu =
-      Number(pRows[0].sisa_cuti_tahun_lalu) || 0;
+      Number(pegawaiRows[0].sisa_cuti_tahun_lalu) || 0;
 
     const quotaKini =
-      Number(pRows[0].cuti_tahun_ini) || 0;
+      Number(pegawaiRows[0].cuti_tahun_ini) || 0;
 
-    const totalKuota =
-      quotaLalu + quotaKini;
+    // Pemakaian lama pada SEL yang sedang diedit
+    const durasiLama =
+      Number(existingRows[0]?.total_durasi) || 0;
 
-    if (durasi > totalKuota) {
+    // Kembalikan dahulu kuota dari pemakaian lama
+    let quotaLaluTersedia =
+      quotaLalu + durasiLama;
+
+    let quotaKiniTersedia =
+      quotaKini;
+
+    // Jika kuota tahun lalu dikembalikan melebihi
+    // kondisi normal, tetap prioritaskan tahun lalu.
+    const totalTersedia =
+      quotaLaluTersedia + quotaKiniTersedia;
+
+    if (durasiBaru > totalTersedia) {
       throw new Error(
-        `Kuota tidak cukup. Total sisa cuti: ${totalKuota} hari.`
+        `Kuota tidak cukup. Total sisa kuota setelah koreksi data lama: ${totalTersedia} hari.`
       );
     }
 
-    let sisaDurasi = durasi;
+    // Hapus seluruh record Tahunan pada sel tersebut.
+    await sql`
+      DELETE FROM leave_records
+      WHERE
+        pegawai_id = ${pegawaiId}
+        AND jenis_cuti = 'Tahunan'
+        AND bulan_angka = ${bulanAngka}
+        AND tahun = ${tahun}
+    `;
 
-    let newQuotaLalu = quotaLalu;
-    let newQuotaKini = quotaKini;
+    // Pakai kuota tahun lalu terlebih dahulu
+    let sisaDurasi = durasiBaru;
 
-    // Prioritas memakai sisa tahun lalu
-    if (newQuotaLalu > 0) {
-      const terpakaiDiLalu = Math.min(
+    if (quotaLaluTersedia > 0) {
+      const digunakanDariLalu = Math.min(
         sisaDurasi,
-        newQuotaLalu
+        quotaLaluTersedia
       );
 
-      newQuotaLalu -= terpakaiDiLalu;
-      sisaDurasi -= terpakaiDiLalu;
+      quotaLaluTersedia -= digunakanDariLalu;
+      sisaDurasi -= digunakanDariLalu;
     }
 
-    // Sisanya memakai kuota tahun berjalan
+    // Sisanya menggunakan kuota tahun berjalan
     if (sisaDurasi > 0) {
-      newQuotaKini -= sisaDurasi;
+      quotaKiniTersedia -= sisaDurasi;
     }
 
-    await sql.transaction([
-      sql`
-        INSERT INTO leave_records (
-          pegawai_id,
-          jenis_cuti,
-          bulan_angka,
-          tahun,
-          durasi,
-          keterangan
-        )
-        VALUES (
-          ${pegawaiId},
-          'Tahunan',
-          ${bulanAngka},
-          ${tahun},
-          ${durasi},
-          'Pengambilan otomatis dari panel bulanan.'
-        )
-      `,
+    const keteranganFinal =
+      keterangan.trim() ||
+      "Pengambilan cuti tahunan.";
 
-      sql`
-        UPDATE data_pegawai
-        SET
-          sisa_cuti_tahun_lalu = ${newQuotaLalu},
-          cuti_tahun_ini = ${newQuotaKini}
-        WHERE id = ${pegawaiId}
-      `,
-    ]);
+    await sql`
+      INSERT INTO leave_records (
+        pegawai_id,
+        jenis_cuti,
+        bulan_angka,
+        tahun,
+        durasi,
+        keterangan
+      )
+      VALUES (
+        ${pegawaiId},
+        'Tahunan',
+        ${bulanAngka},
+        ${tahun},
+        ${durasiBaru},
+        ${keteranganFinal}
+      )
+    `;
+
+    await sql`
+      UPDATE data_pegawai
+      SET
+        sisa_cuti_tahun_lalu = ${quotaLaluTersedia},
+        cuti_tahun_ini = ${quotaKiniTersedia}
+      WHERE id = ${pegawaiId}
+    `;
 
     revalidatePath("/admin");
     revalidatePath("/admin/manajemen-cuti");
@@ -267,7 +313,9 @@ export async function simpanCutiTahunan(
     return {
       success: true,
       message:
-        "Cuti Tahunan berhasil dicatat dan kuota diperbarui.",
+        durasiLama > 0
+          ? "Data cuti berhasil diperbarui."
+          : "Cuti Tahunan berhasil dicatat.",
     };
   } catch (error: unknown) {
     console.error(
@@ -288,7 +336,7 @@ export async function simpanCutiTahunan(
 }
 
 // ==========================================
-// C. CUTI LAINNYA
+// C. SIMPAN / EDIT CUTI LAINNYA
 // ==========================================
 
 export async function simpanCutiLainnya(
@@ -315,59 +363,66 @@ export async function simpanCutiLainnya(
       formData.get("keterangan") ?? ""
     ).trim();
 
-    const tahun = new Date().getFullYear();
+    const tahun = parseNumber(
+      formData.get("tahun"),
+      new Date().getFullYear()
+    );
 
     if (!pegawaiId) {
-      throw new Error(
-        "Pegawai tidak valid."
-      );
+      throw new Error("Pegawai tidak valid.");
     }
 
     if (!jenis) {
-      throw new Error(
-        "Jenis cuti wajib dipilih."
-      );
+      throw new Error("Jenis cuti wajib dipilih.");
     }
 
-    if (
-      bulan < 1 ||
-      bulan > 12
-    ) {
-      throw new Error(
-        "Bulan cuti wajib dipilih."
-      );
+    if (bulan < 1 || bulan > 12) {
+      throw new Error("Bulan cuti wajib dipilih.");
     }
 
     if (durasi <= 0) {
-      throw new Error(
-        "Durasi harus lebih dari 0."
-      );
+      throw new Error("Durasi harus lebih dari 0.");
     }
 
     if (!keterangan) {
-      throw new Error(
-        "Keterangan wajib diisi."
-      );
+      throw new Error("Keterangan wajib diisi.");
     }
 
-    await sql`
-      INSERT INTO leave_records (
-        pegawai_id,
-        jenis_cuti,
-        bulan_angka,
-        tahun,
-        durasi,
-        keterangan
-      )
-      VALUES (
-        ${pegawaiId},
-        ${jenis},
-        ${bulan},
-        ${tahun},
-        ${durasi},
-        ${keterangan}
-      )
-    `;
+    // ==========================================
+    // PENTING:
+    // Hapus record lama pada sel yang sama.
+    // Jadi 3 -> 2 tidak menjadi 5.
+    // ==========================================
+
+    await sql.transaction([
+      sql`
+        DELETE FROM leave_records
+        WHERE
+          pegawai_id = ${pegawaiId}
+          AND jenis_cuti = ${jenis}
+          AND bulan_angka = ${bulan}
+          AND tahun = ${tahun}
+      `,
+
+      sql`
+        INSERT INTO leave_records (
+          pegawai_id,
+          jenis_cuti,
+          bulan_angka,
+          tahun,
+          durasi,
+          keterangan
+        )
+        VALUES (
+          ${pegawaiId},
+          ${jenis},
+          ${bulan},
+          ${tahun},
+          ${durasi},
+          ${keterangan}
+        )
+      `,
+    ]);
 
     revalidatePath("/admin");
     revalidatePath("/admin/manajemen-cuti");
@@ -375,7 +430,8 @@ export async function simpanCutiLainnya(
 
     return {
       success: true,
-      message: `Cuti ${jenis} berhasil dicatat.`,
+      message:
+        "Data cuti berhasil disimpan/diperbarui.",
     };
   } catch (error: unknown) {
     console.error(
@@ -396,7 +452,163 @@ export async function simpanCutiLainnya(
 }
 
 // ==========================================
-// D. RESET KUOTA
+// D. HAPUS / BERSIHKAN SATU DATA CUTI
+// ==========================================
+
+export async function hapusCuti(
+  pegawaiId: number,
+  bulan: number,
+  tahun: number,
+  jenis: string
+) {
+  try {
+    if (!pegawaiId || !bulan || !tahun || !jenis) {
+      throw new Error(
+        "Data penghapusan tidak lengkap."
+      );
+    }
+
+    // Jika Tahunan, kembalikan kuota
+    if (jenis === "Tahunan") {
+      const result = await sql.transaction([
+        sql`
+          SELECT
+            COALESCE(SUM(durasi), 0) AS total_durasi
+          FROM leave_records
+          WHERE
+            pegawai_id = ${pegawaiId}
+            AND jenis_cuti = 'Tahunan'
+            AND bulan_angka = ${bulan}
+            AND tahun = ${tahun}
+        `,
+
+        sql`
+          SELECT
+            sisa_cuti_tahun_lalu,
+            cuti_tahun_ini
+          FROM data_pegawai
+          WHERE id = ${pegawaiId}
+          FOR UPDATE
+        `,
+      ]);
+
+      const durasi =
+        Number(
+          (result[0] as Array<{
+            total_durasi: number;
+          }>)[0]?.total_durasi
+        ) || 0;
+
+      const pegawai =
+        (result[1] as Array<{
+          sisa_cuti_tahun_lalu: number;
+          cuti_tahun_ini: number;
+        }>)[0];
+
+      if (pegawai && durasi > 0) {
+        const quotaLalu =
+          Number(
+            pegawai.sisa_cuti_tahun_lalu
+          ) || 0;
+
+        const quotaKini =
+          Number(
+            pegawai.cuti_tahun_ini
+          ) || 0;
+
+        // Karena saat menyimpan kita memakai
+        // tahun lalu terlebih dahulu, pengembalian
+        // dilakukan ke tahun berjalan terlebih dahulu
+        // agar tidak mengubah struktur historis secara
+        // berlebihan.
+        const quotaKiniBaru =
+          quotaKini + durasi;
+
+        await sql`
+          UPDATE data_pegawai
+          SET
+            cuti_tahun_ini = ${quotaKiniBaru}
+          WHERE id = ${pegawaiId}
+        `;
+      }
+    }
+
+    await sql`
+      DELETE FROM leave_records
+      WHERE
+        pegawai_id = ${pegawaiId}
+        AND bulan_angka = ${bulan}
+        AND tahun = ${tahun}
+        AND jenis_cuti = ${jenis}
+    `;
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/manajemen-cuti");
+    revalidatePath(`/admin/data-pegawai/${pegawaiId}`);
+
+    return {
+      success: true,
+      message: "Data cuti berhasil dibersihkan.",
+    };
+  } catch (error: unknown) {
+    console.error(
+      "Gagal menghapus cuti:",
+      error
+    );
+
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Gagal menghapus data cuti.",
+    };
+  }
+}
+
+// ==========================================
+// E. BERSIHKAN SEMUA DATA CUTI PEGAWAI
+// ==========================================
+
+export async function bersihkanSemuaCutiPegawai(
+  pegawaiId: number,
+  tahun: number
+) {
+  try {
+    await sql`
+      DELETE FROM leave_records
+      WHERE
+        pegawai_id = ${pegawaiId}
+        AND tahun = ${tahun}
+    `;
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/manajemen-cuti");
+    revalidatePath(`/admin/data-pegawai/${pegawaiId}`);
+
+    return {
+      success: true,
+      message:
+        "Seluruh data cuti pegawai berhasil dibersihkan.",
+    };
+  } catch (error: unknown) {
+    console.error(
+      "Gagal membersihkan seluruh cuti:",
+      error
+    );
+
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Gagal membersihkan data cuti.",
+    };
+  }
+}
+
+// ==========================================
+// F. RESET KUOTA
 // ==========================================
 
 export async function resetCutiPegawai(
@@ -436,14 +648,12 @@ export async function resetCutiPegawai(
       error
     );
 
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Gagal mereset kuota.";
-
     return {
       success: false,
-      message,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Gagal mereset kuota.",
     };
   }
 }
