@@ -792,90 +792,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
             FILTER BAR
         ===================================================== */}
 
-        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800">Filter Data Pegawai</h2>
 
-              <p className="text-sm text-gray-500">Gunakan filter untuk menampilkan pegawai berdasarkan unit kerja, jabatan, dan pangkat/golongan.</p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setFilterBidang("");
-                setFilterJabatan("");
-                setFilterPangkat("");
-              }}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
-            >
-              Reset Filter
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {/* BIDANG */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Bidang / Unit Kerja</label>
-
-              <select
-                value={filterBidang}
-                onChange={(e) => setFilterBidang(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              >
-                <option value="">Semua Bidang / Unit Kerja</option>
-
-                {DAFTAR_BIDANG.map((bidang) => (
-                  <option key={bidang} value={bidang}>
-                    {bidang}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* JABATAN */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Jabatan</label>
-
-              <select
-                value={filterJabatan}
-                onChange={(e) => setFilterJabatan(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              >
-                <option value="">Semua Jabatan</option>
-
-                {DAFTAR_JABATAN.map((jabatan) => (
-                  <option key={jabatan} value={jabatan}>
-                    {jabatan}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* PANGKAT */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Pangkat / Golongan</label>
-
-              <select
-                value={filterPangkat}
-                onChange={(e) => setFilterPangkat(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              >
-                <option value="">Semua Pangkat / Golongan</option>
-
-                {DAFTAR_PANGKAT.map((pangkat) => (
-                  <option key={pangkat} value={pangkat}>
-                    {pangkat}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
-            Menampilkan <span className="font-semibold text-gray-900">{filteredPegawai.length}</span> dari <span className="font-semibold text-gray-900">{dataPegawai.length}</span> pegawai
-          </div>
-        </div>
 
         <section className="dashboard-card bg-white rounded-3xl border border-slate-200 shadow-sm p-4 mb-6">
           <div className="flex flex-col lg:flex-row gap-4 justify-between">
@@ -897,11 +814,11 @@ export default function DashboardClient({ dataPegawai }: Props) {
               </button>
 
               <button onClick={() => setUnitFilter("Pusat")} className={`px-4 py-2 rounded-xl text-xs font-bold ${unitFilter === "Pusat" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500"}`}>
-                BBPVP Pusat
+                BBPVP Makassar
               </button>
 
               <button onClick={() => setUnitFilter("Satpel")} className={`px-4 py-2 rounded-xl text-xs font-bold ${unitFilter === "Satpel" ? "bg-orange-500 text-white" : "bg-slate-100 text-slate-500"}`}>
-                Satpel
+                SATPEL
               </button>
             </div>
 
@@ -955,7 +872,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
             <SectionTitle color="blue" title="Sebaran Unit Kerja" subtitle="Distribusi pegawai berdasarkan lokasi kerja." />
 
             <div className="space-y-5 mt-6">
-              <ProgressRow label="BBPVP Pusat" value={totalPusat} total={totalPegawai} color="bg-blue-600" />
+              <ProgressRow label="BBPVP Makassar" value={totalPusat} total={totalPegawai} color="bg-blue-600" />
 
               <ProgressRow label="Satpel Daerah" value={totalSatpel} total={totalPegawai} color="bg-orange-500" />
             </div>
@@ -1250,14 +1167,6 @@ export default function DashboardClient({ dataPegawai }: Props) {
         <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 mb-6">
           <div className="flex flex-col md:flex-row justify-between gap-4">
             <SectionTitle color="violet" title="Peta Jabatan Fungsional" subtitle="Sebaran ASN berdasarkan rumpun dan jenjang jabatan." />
-
-            <div className="flex gap-2">
-              <span className="px-4 py-2 bg-violet-50 text-violet-700 rounded-xl text-xs font-black">{matrixTotals.Total} ASN</span>
-
-              <button onClick={() => setExpandedMatrix(!expandedMatrix)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold">
-                {expandedMatrix ? "Ringkas" : "Perbesar"}
-              </button>
-            </div>
           </div>
 
           <div className="overflow-x-auto mt-6">
@@ -1332,9 +1241,9 @@ export default function DashboardClient({ dataPegawai }: Props) {
 
                   <th className="text-center px-4 py-4 text-[10px] font-black uppercase">Total</th>
 
-                  <th className="text-center px-4 py-4 text-[10px] font-black uppercase text-orange-600">Satpel</th>
+                  <th className="text-center px-4 py-4 text-[10px] font-black uppercase text-orange-600">SATPEL</th>
 
-                  <th className="text-center px-4 py-4 text-[10px] font-black uppercase text-blue-600">BBPVP Pusat</th>
+                  <th className="text-center px-4 py-4 text-[10px] font-black uppercase text-blue-600">BBPVP Makassar</th>
                 </tr>
               </thead>
 
