@@ -83,9 +83,7 @@ export default function FormPegawai() {
               <button onClick={() => setShowModal(false)} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 rounded-xl transition-colors">
                 Tutup & Tambah Lagi
               </button>
-              <a href="/admin/data-pegawai" className="block w-full bg-[#15406A] hover:bg-blue-900 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-blue-900/30">
-                Lihat Tabel Data
-              </a>
+              
             </div>
           </div>
         </div>

@@ -50,6 +50,74 @@ const URUTAN_BIDANG = [
   "Driver",
 ];
 
+const DAFTAR_JABATAN = [
+  "Kepala BBPVP Makassar",
+  "Kabag Umum",
+
+  "Instruktur Ahli Utama",
+  "Instruktur Ahli Madya",
+  "Instruktur Ahli Muda",
+  "Instruktur Ahli Pertama",
+  "Instruktur Mahir",
+  "Instruktur Penyelia",
+
+  "Analis Sumber Daya Manusia Aparatur Ahli Muda",
+  "Analis Sumber Daya Manusia Aparatur Ahli Pertama",
+  "Pengantar Kerja Ahli Madya",
+  "Pengantar Kerja Ahli Muda",
+  "Pengantar Kerja Ahli Pertama",
+  "Perencana Ahli Madya",
+  "Perencana Ahli Pertama",
+  "Arsiparis Ahli Muda",
+  "Arsiparis Ahli Pertama",
+  "Pranata Komputer Ahli Pertama",
+  "Pranata Komputer Terampil",
+  "Analis Pengelolaan Keuangan APBN Ahli Pertama",
+  "Pranata Keuangan APBN Terampil",
+  "Penelaah Teknis Kebijakan",
+  "Konselor SDM",
+
+  "Penata Layanan Operasional",
+  "Pengelola Layanan Operasional",
+  "Pengadministrasi Perkantoran",
+  "Penata Laksana Barang Terampil",
+  "Penata Kelola Sistem dan Teknologi Informasi",
+  "Teknisi Sarana dan Prasarana",
+  "Pramubakti",
+];
+
+const DAFTAR_PANGKAT = [
+  "I/a: Juru Muda",
+  "I/b: Juru Muda Tingkat I",
+  "I/c: Juru",
+  "I/d: Juru Tingkat I",
+
+  "II/a: Pengatur Muda",
+  "II/b: Pengatur Muda Tingkat I",
+  "II/c: Pengatur",
+  "II/d: Pengatur Tingkat I",
+
+  "III/a: Penata Muda",
+  "III/b: Penata Muda Tingkat I",
+  "III/c: Penata",
+  "III/d: Penata Tingkat I",
+
+  "IV/a: Pembina",
+  "IV/b: Pembina Tingkat I",
+  "IV/c: Pembina Utama Muda",
+  "IV/d: Pembina Utama Madya",
+  "IV/e: Pembina Utama",
+
+  "I",
+  "IV",
+  "V",
+  "VI",
+  "VII",
+  "IX",
+  "X",
+  "XI",
+];
+
 function formatTanggal(dateString: string | null) {
   if (!dateString) return "-";
   const date = new Date(dateString);
@@ -98,11 +166,30 @@ function hitungMasaPensiun(tanggalLahir: string | null, jabatan: string, status:
 
 export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
   const [searchTerm, setSearchTerm] = useState("");
+
+  // FILTER
+  const [filterBidang, setFilterBidang] = useState("");
+  const [filterJabatan, setFilterJabatan] = useState("");
+  const [filterPangkat, setFilterPangkat] = useState("");
+
+  // MODAL HAPUS
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [pegawaiToDelete, setPegawaiToDelete] = useState<Pegawai | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const filteredData = data.filter((p) => p.nama.toLowerCase().includes(searchTerm.toLowerCase()) || p.nip.toLowerCase().includes(searchTerm.toLowerCase()) || p.jabatan.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredData = data.filter((p) => {
+    const keyword = searchTerm.toLowerCase();
+
+    const cocokPencarian = p.nama.toLowerCase().includes(keyword) || p.nip.toLowerCase().includes(keyword) || p.jabatan.toLowerCase().includes(keyword);
+
+    const cocokBidang = filterBidang === "" || p.bidang.replace("-- ", "") === filterBidang;
+
+    const cocokJabatan = filterJabatan === "" || p.jabatan === filterJabatan;
+
+    const cocokPangkat = filterPangkat === "" || p.pangkat_golongan === filterPangkat;
+
+    return cocokPencarian && cocokBidang && cocokJabatan && cocokPangkat;
+  });
 
   const groupedData: Record<string, Pegawai[]> = {};
   filteredData.forEach((p) => {
@@ -156,34 +243,87 @@ export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
 
       {/* TABEL UTAMA */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-5 border-b border-gray-100 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <svg className="w-5 h-5 text-[#15406A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                ></path>
-              </svg>
-            </div>
-            <h2 className="text-lg font-bold text-gray-800">Direktori Lengkap Pegawai</h2>
-          </div>
+        <div className="p-5 border-b border-gray-100 bg-white md:flex-row justify-between items-center gap-4">
 
-          <div className="relative w-full md:w-[350px]">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
+          <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+            {/* SEARCH */}
+            <div className="relative w-full md:w-full">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+
+              <input
+                type="text"
+                placeholder="Cari nama, NIP, atau jabatan..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg pl-9 pr-3 py-2 text-sm focus:bg-white focus:outline-none focus:border-[#15406A] focus:ring-2 focus:ring-blue-100 transition-all"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Cari berdasarkan nama, NIP, atau jabatan..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg pl-9 pr-3 py-2 text-sm focus:bg-white focus:outline-none focus:border-[#15406A] focus:ring-2 focus:ring-blue-100 transition-all"
-            />
+
+            {/* FILTER BIDANG */}
+            <select
+              value={filterBidang}
+              onChange={(e) => setFilterBidang(e.target.value)}
+              className="bg-gray-50 border border-gray-200 text-gray-700 rounded-lg px-3 py-2 text-sm focus:bg-white focus:outline-none focus:border-[#15406A] focus:ring-2 focus:ring-blue-100 transition-all md:w-[220px]"
+            >
+              <option value="">Semua Bidang / Unit Kerja</option>
+
+              {URUTAN_BIDANG.map((bidang) => (
+                <option key={bidang} value={bidang}>
+                  {bidang}
+                </option>
+              ))}
+            </select>
+
+            {/* FILTER JABATAN */}
+            <select
+              value={filterJabatan}
+              onChange={(e) => setFilterJabatan(e.target.value)}
+              className="bg-gray-50 border border-gray-200 text-gray-700 rounded-lg px-3 py-2 text-sm focus:bg-white focus:outline-none focus:border-[#15406A] focus:ring-2 focus:ring-blue-100 transition-all md:w-[220px]"
+            >
+              <option value="">Semua Jabatan</option>
+
+              {DAFTAR_JABATAN.map((jabatan) => (
+                <option key={jabatan} value={jabatan}>
+                  {jabatan}
+                </option>
+              ))}
+            </select>
+
+            {/* FILTER PANGKAT */}
+            <select
+              value={filterPangkat}
+              onChange={(e) => setFilterPangkat(e.target.value)}
+              className="bg-gray-50 border border-gray-200 text-gray-700 rounded-lg px-3 py-2 text-sm focus:bg-white focus:outline-none focus:border-[#15406A] focus:ring-2 focus:ring-blue-100 transition-all md:w-[210px]"
+            >
+              <option value="">Semua Pangkat / Golongan</option>
+
+              {DAFTAR_PANGKAT.map((pangkat) => (
+                <option key={pangkat} value={pangkat}>
+                  {pangkat}
+                </option>
+              ))}
+            </select>
+
+            {/* RESET FILTER */}
+            {(filterBidang || filterJabatan || filterPangkat || searchTerm) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilterBidang("");
+                  setFilterJabatan("");
+                  setFilterPangkat("");
+                }}
+                className="px-3 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg border border-gray-200 transition-colors whitespace-nowrap"
+                title="Reset semua pencarian dan filter"
+              >
+                Reset
+              </button>
+            )}
           </div>
         </div>
 

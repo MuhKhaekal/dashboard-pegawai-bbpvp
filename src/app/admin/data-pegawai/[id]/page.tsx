@@ -179,18 +179,18 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
         </div>
 
         {/* KARTU KUOTA CUTI TAHUNAN */}
-        <div className="bento-card lg:col-span-1 p-6 bg-[#15406A] text-white flex flex-col justify-between border-none relative overflow-hidden">
+        <div className="bento-card lg:col-span-1 p-6 bg-[#15406A] flex flex-col justify-between border-none relative overflow-hidden text-slate-800">
           <div>
-            <h3 className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">Kuota Tahunan ({currentYear})</h3>
-            <div className="text-4xl font-black">{totalKuotaMain} <span className="text-lg font-medium text-blue-300">Hari</span></div>
+            <h3 className=" text-xs font-bold uppercase tracking-wider mb-1">Kuota Tahunan ({currentYear})</h3>
+            <div className="text-4xl font-black">{totalKuotaMain} <span className="text-lg font-medium">Hari</span></div>
           </div>
           <div className="mt-4 pt-4 border-t border-blue-800/50 flex justify-between text-sm">
             <div>
-              <span className="block text-blue-300 text-[10px] uppercase">Kini ({currentYear})</span>
+              <span className="block text-[10px] uppercase">Kini ({currentYear})</span>
               <span className="font-bold">{p.cuti_tahun_ini || 0} Hari</span>
             </div>
             <div className="text-right">
-              <span className="block text-blue-300 text-[10px] uppercase">Sisa Lalu</span>
+              <span className="block text-[10px] uppercase">Sisa Lalu</span>
               <span className="font-bold">{p.sisa_cuti_tahun_lalu || 0} Hari</span>
             </div>
           </div>

@@ -169,13 +169,15 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
   // - tahunan Des
   // ==========================================
 
-  const getSisaKuota = (pegawai: Pegawai) => {
-    const kuotaAwal = Number(pegawai.sisa_cuti_tahun_lalu) + Number(pegawai.cuti_tahun_ini);
+const getSisaKuota = (pegawai: Pegawai) => {
+  const sisaTahunLalu =
+    Number(pegawai.sisa_cuti_tahun_lalu) || 0;
 
-    const totalTahunan = BULAN.reduce((total, bulan) => total + getAnnualLeaveByMonth(pegawai, bulan.angka), 0);
+  const sisaTahunIni =
+    Number(pegawai.cuti_tahun_ini) || 0;
 
-    return kuotaAwal - totalTahunan;
-  };
+  return sisaTahunLalu + sisaTahunIni;
+};  
 
   // ==========================================
   // BUKA MODAL CUTI
