@@ -242,7 +242,9 @@ export default function FormEditPegawai({ pegawai }: { pegawai: Pegawai }) {
                     </optgroup>
                     <optgroup label="Pelaksana / Umum / Teknis">
                       <option value="Penata Layanan Operasional">Penata Layanan Operasional</option>
+                      <option value="Operator Layanan Operasional">Operator Layanan Operasional</option>
                       <option value="Pengelola Layanan Operasional">Pengelola Layanan Operasional</option>
+                      <option value="Pengelola Umum Operasional">Pengelola Umum Operasional</option>
                       <option value="Pengadministrasi Perkantoran">Pengadministrasi Perkantoran</option>
                       <option value="Penata Laksana Barang Terampil">Penata Laksana Barang Terampil</option>
                       <option value="Penata Kelola Sistem dan Teknologi Informasi">Penata Kelola Sistem & TI</option>

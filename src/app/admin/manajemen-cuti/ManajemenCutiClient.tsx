@@ -112,12 +112,27 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
   }, [sortedData, search]);
 
   // ==========================================
-  // BAGI 2 SECTION
+  // PEMISAHAN ASN / NON-ASN
+  // + NON SATPEL / SATPEL SPESIFIK
   // ==========================================
 
-  const nonSatpelSpesifik = filteredData.filter((pegawai) => !SATPEL_SPESIFIK.some((satpel) => pegawai.bidang?.trim().toLowerCase() === satpel.toLowerCase()));
+  const isSatpelSpesifik = (pegawai: Pegawai) => {
+    return SATPEL_SPESIFIK.some((satpel) => pegawai.bidang?.trim().toLowerCase() === satpel.toLowerCase());
+  };
 
-  const satpelSpesifik = filteredData.filter((pegawai) => SATPEL_SPESIFIK.some((satpel) => pegawai.bidang?.trim().toLowerCase() === satpel.toLowerCase()));
+  const isASN = (pegawai: Pegawai) => {
+    const status = (pegawai.status_kepegawaian || "").trim().toLowerCase();
+
+    return status === "pns" || status === "pppk";
+  };
+
+  const asnNonSatpel = filteredData.filter((pegawai) => isASN(pegawai) && !isSatpelSpesifik(pegawai));
+
+  const nonAsnNonSatpel = filteredData.filter((pegawai) => !isASN(pegawai) && !isSatpelSpesifik(pegawai));
+
+  const asnSatpel = filteredData.filter((pegawai) => isASN(pegawai) && isSatpelSpesifik(pegawai));
+
+  const nonAsnSatpel = filteredData.filter((pegawai) => !isASN(pegawai) && isSatpelSpesifik(pegawai));
 
   // ==========================================
   // AMBIL RECORD
@@ -169,15 +184,13 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
   // - tahunan Des
   // ==========================================
 
-const getSisaKuota = (pegawai: Pegawai) => {
-  const sisaTahunLalu =
-    Number(pegawai.sisa_cuti_tahun_lalu) || 0;
+  const getSisaKuota = (pegawai: Pegawai) => {
+    const sisaTahunLalu = Number(pegawai.sisa_cuti_tahun_lalu) || 0;
 
-  const sisaTahunIni =
-    Number(pegawai.cuti_tahun_ini) || 0;
+    const sisaTahunIni = Number(pegawai.cuti_tahun_ini) || 0;
 
-  return sisaTahunLalu + sisaTahunIni;
-};  
+    return sisaTahunLalu + sisaTahunIni;
+  };
 
   // ==========================================
   // BUKA MODAL CUTI
@@ -1012,10 +1025,16 @@ const getSisaKuota = (pegawai: Pegawai) => {
       </div>
 
       {/* SECTION 1 */}
-      {renderTable(nonSatpelSpesifik, "1. NON SATPEL SPESIFIK")}
+      {renderTable(asnNonSatpel, "1. ASN — BBPVP MAKASSAR")}
 
       {/* SECTION 2 */}
-      {renderTable(satpelSpesifik, "2. SATPEL SPESIFIK — MAMUJU, MAJENE, PALU")}
+      {renderTable(nonAsnNonSatpel, "2. NON ASN — BBPVP MAKASSAR")}
+
+      {/* SECTION 3 */}
+      {renderTable(asnSatpel, "3. ASN — SATPEL")}
+
+      {/* SECTION 4 */}
+      {renderTable(nonAsnSatpel, "4. NON ASN — SATPEL")}
 
       {/* MODAL */}
       {modalType &&

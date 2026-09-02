@@ -12,70 +12,6 @@ const SATPEL_DAERAH = ["SATPEL Mamuju", "SATPEL Majene", "SATPEL Palu"];
 const BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 
 const JENJANG = ["Ahli Utama", "Ahli Madya", "Ahli Muda", "Ahli Pertama", "Mahir", "Terampil"];
-const DAFTAR_BIDANG = [
-  "Struktural",
-  "Instruktur Non Kejuruan",
-  "Kej. Manufaktur",
-  "Kej. Otomotif",
-  "Kej. Elektronika",
-  "Kej. Listrik",
-  "Kej. Teknik Pendingin",
-  "Kej. Garmen Apparel",
-  "Kej. Administrasi Bisnis dan Manajemen",
-  "Kej. Teknik Las",
-  "Kej. Teknologi Informasi dan Komunikasi",
-  "Kej. Tata Kecantikan",
-  "Kej. Bangunan",
-  "Kej. Pariwisata",
-  "Bagian Umum SDMA",
-  "Bagian Umum Keuangan",
-  "Bagian Umum Pengadaan",
-  "Bidang Pemberdayaan",
-  "Bidang Penyelenggara",
-  "Bidang Intala dan Uji Coba Program",
-  "LSP",
-  "SATPEL",
-  "Security",
-  "Cleaning Services",
-  "Teknisi",
-  "Driver",
-];
-
-const DAFTAR_JABATAN = [
-  "Kepala BBPVP Makassar",
-  "Kabag Umum",
-
-  "Instruktur Ahli Utama",
-  "Instruktur Ahli Madya",
-  "Instruktur Ahli Muda",
-  "Instruktur Ahli Pertama",
-  "Instruktur Mahir",
-  "Instruktur Penyelia",
-
-  "Analis Sumber Daya Manusia Aparatur Ahli Muda",
-  "Analis Sumber Daya Manusia Aparatur Ahli Pertama",
-  "Pengantar Kerja Ahli Madya",
-  "Pengantar Kerja Ahli Muda",
-  "Pengantar Kerja Ahli Pertama",
-  "Perencana Ahli Madya",
-  "Perencana Ahli Pertama",
-  "Arsiparis Ahli Muda",
-  "Arsiparis Ahli Pertama",
-  "Pranata Komputer Ahli Pertama",
-  "Pranata Komputer Terampil",
-  "Analis Pengelolaan Keuangan APBN Ahli Pertama",
-  "Pranata Keuangan APBN Terampil",
-  "Penelaah Teknis Kebijakan",
-  "Konselor SDM",
-
-  "Penata Layanan Operasional",
-  "Pengelola Layanan Operasional",
-  "Pengadministrasi Perkantoran",
-  "Penata Laksana Barang Terampil",
-  "Penata Kelola Sistem dan Teknologi Informasi",
-  "Teknisi Sarana dan Prasarana",
-  "Pramubakti",
-];
 
 const KATEGORI = [
   { key: "Instruktur", label: "Instruktur" },
@@ -98,38 +34,6 @@ const PELAKSANA = [
   "Pengadministrasi Perkantoran",
   "Operator Layanan Operasional",
   "Pengelola Umum Operasional",
-];
-
-const DAFTAR_PANGKAT = [
-  "I/a: Juru Muda",
-  "I/b: Juru Muda Tingkat I",
-  "I/c: Juru",
-  "I/d: Juru Tingkat I",
-
-  "II/a: Pengatur Muda",
-  "II/b: Pengatur Muda Tingkat I",
-  "II/c: Pengatur",
-  "II/d: Pengatur Tingkat I",
-
-  "III/a: Penata Muda",
-  "III/b: Penata Muda Tingkat I",
-  "III/c: Penata",
-  "III/d: Penata Tingkat I",
-
-  "IV/a: Pembina",
-  "IV/b: Pembina Tingkat I",
-  "IV/c: Pembina Utama Muda",
-  "IV/d: Pembina Utama Madya",
-  "IV/e: Pembina Utama",
-
-  "I",
-  "IV",
-  "V",
-  "VI",
-  "VII",
-  "IX",
-  "X",
-  "XI",
 ];
 
 export default function DashboardClient({ dataPegawai }: Props) {
