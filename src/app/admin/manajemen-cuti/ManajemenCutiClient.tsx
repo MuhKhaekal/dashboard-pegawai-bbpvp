@@ -71,6 +71,10 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
 
   const [search, setSearch] = useState("");
 
+  type ActiveTable = "asnNonSatpel" | "nonAsnNonSatpel" | "asnSatpel" | "nonAsnSatpel";
+
+  const [activeTable, setActiveTable] = useState<ActiveTable>("asnNonSatpel");
+
   const [modalType, setModalType] = useState<ModalType>(null);
 
   const [selectedCell, setSelectedCell] = useState<CellTarget | null>(null);
@@ -449,9 +453,39 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
   const renderTable = (data: Pegawai[], sectionTitle: string) => {
     return (
       <div className="space-y-2">
-        <div className="bg-[#15406A] text-white px-4 py-3 font-black text-sm">
-          {sectionTitle}
-          <span className="ml-2 font-normal text-blue-100">({data.length} pegawai)</span>
+        <div
+          className="
+    bg-[#15406A]
+    text-white
+    px-4
+    py-3
+    flex
+    items-center
+    justify-between
+    gap-3
+  "
+        >
+          <div>
+            <div className="font-black text-sm">{sectionTitle}</div>
+
+            <div className="text-[10px] text-blue-100 mt-0.5">Rekap pencatatan cuti tahun {currentYear}</div>
+          </div>
+
+          <div
+            className="
+      px-3
+      py-1.5
+      rounded-lg
+      bg-white/10
+      border
+      border-white/10
+      text-xs
+      font-black
+      whitespace-nowrap
+    "
+          >
+            {data.length} PEGAWAI
+          </div>
         </div>
 
         <div className="border border-slate-300 bg-white shadow-sm overflow-hidden">
@@ -895,6 +929,35 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
     );
   };
 
+  const TABLE_OPTIONS = [
+    {
+      key: "asnNonSatpel" as ActiveTable,
+      label: "ASN — BBPVP MAKASSAR",
+      shortLabel: "ASN BBPVP",
+      data: asnNonSatpel,
+    },
+    {
+      key: "nonAsnNonSatpel" as ActiveTable,
+      label: "NON ASN — BBPVP MAKASSAR",
+      shortLabel: "NON ASN BBPVP",
+      data: nonAsnNonSatpel,
+    },
+    {
+      key: "asnSatpel" as ActiveTable,
+      label: "ASN — SATPEL",
+      shortLabel: "ASN SATPEL",
+      data: asnSatpel,
+    },
+    {
+      key: "nonAsnSatpel" as ActiveTable,
+      label: "NON ASN — SATPEL",
+      shortLabel: "NON ASN SATPEL",
+      data: nonAsnSatpel,
+    },
+  ];
+
+  const activeTableData = TABLE_OPTIONS.find((item) => item.key === activeTable) ?? TABLE_OPTIONS[0];
+
   // ==========================================
   // MAIN
   // ==========================================
@@ -1024,17 +1087,143 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
         </div>
       </div>
 
-      {/* SECTION 1 */}
-      {renderTable(asnNonSatpel, "1. ASN — BBPVP MAKASSAR")}
+      {/* ==========================================
+    PILIH TABEL
+========================================== */}
+      <div
+        className="
+    bg-white
+    border border-slate-200
+    rounded-2xl
+    shadow-sm
+    p-3
+  "
+      >
+        <div className="flex flex-col gap-3">
+          {/* LABEL */}
+          <div className="px-2">
+            <div className="text-xs font-black text-slate-500 uppercase tracking-wide">Kelompok Pegawai</div>
 
-      {/* SECTION 2 */}
-      {renderTable(nonAsnNonSatpel, "2. NON ASN — BBPVP MAKASSAR")}
+            <div className="text-[11px] text-slate-400 mt-0.5">Pilih kelompok untuk menampilkan tabel cuti</div>
+          </div>
 
-      {/* SECTION 3 */}
-      {renderTable(asnSatpel, "3. ASN — SATPEL")}
+          {/* BUTTON */}
+          <div
+            className="
+        grid
+        grid-cols-1
+        sm:grid-cols-2
+        xl:grid-cols-4
+        gap-2
+      "
+          >
+            {TABLE_OPTIONS.map((item, index) => {
+              const isActive = activeTable === item.key;
 
-      {/* SECTION 4 */}
-      {renderTable(nonAsnSatpel, "4. NON ASN — SATPEL")}
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setActiveTable(item.key)}
+                  className={`
+              group
+              relative
+              overflow-hidden
+              rounded-xl
+              border
+              px-4
+              py-3
+              text-left
+              transition-all
+              duration-200
+              ${isActive ? "bg-[#15406A] border-[#15406A] text-white shadow-md" : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-blue-50 hover:border-blue-200"}
+            `}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      {/* NOMOR */}
+                      <div
+                        className={`
+                    flex
+                    items-center
+                    justify-center
+                    w-8
+                    h-8
+                    rounded-lg
+                    text-xs
+                    font-black
+                    shrink-0
+                    ${isActive ? "bg-white/15 text-white" : "bg-white text-[#15406A] border border-slate-200"}
+                  `}
+                      >
+                        {index + 1}
+                      </div>
+
+                      {/* TEXT */}
+                      <div>
+                        <div
+                          className={`
+                      text-xs
+                      font-black
+                      ${isActive ? "text-white" : "text-slate-700"}
+                    `}
+                        >
+                          {item.shortLabel}
+                        </div>
+
+                        <div
+                          className={`
+                      text-[10px]
+                      mt-0.5
+                      ${isActive ? "text-blue-100" : "text-slate-400"}
+                    `}
+                        >
+                          {item.data.length} pegawai
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CHECK */}
+                    <div
+                      className={`
+                  flex
+                  items-center
+                  justify-center
+                  w-6
+                  h-6
+                  rounded-full
+                  shrink-0
+                  ${isActive ? "bg-white text-[#15406A]" : "bg-slate-200 text-transparent"}
+                `}
+                    >
+                      ✓
+                    </div>
+                  </div>
+
+                  {/* ACTIVE INDICATOR */}
+                  {isActive && (
+                    <div
+                      className="
+                  absolute
+                  bottom-0
+                  left-0
+                  right-0
+                  h-1
+                  bg-white/40
+                "
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ==========================================
+    TABEL AKTIF
+========================================== */}
+      {renderTable(activeTableData.data, `${TABLE_OPTIONS.find((item) => item.key === activeTable)?.label}`)}
 
       {/* MODAL */}
       {modalType &&

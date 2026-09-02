@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import type { Pegawai, LeaveRecord } from "./types";
 
 type Props = {
@@ -147,6 +148,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
   };
 
   const pensiunWatchlist: {
+    id: number;
     nama: string;
     jabatan: string;
     sisaTahun: number;
@@ -168,6 +170,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
   let totalSisaCuti = 0;
 
   const cutiWatchlist: {
+    id: number;
     nama: string;
     jabatan: string;
     total: number;
@@ -192,12 +195,21 @@ export default function DashboardClient({ dataPegawai }: Props) {
   |--------------------------------------------------------------------------
   */
 
-  const golongan = {
+  const golonganPNS = {
     "Gol I": 0,
     "Gol II": 0,
     "Gol III": 0,
     "Gol IV": 0,
-    Lainnya: 0,
+  };
+  const golonganPPPK = {
+    I: 0,
+    IV: 0,
+    V: 0,
+    VI: 0,
+    VII: 0,
+    IX: 0,
+    X: 0,
+    XI: 0,
   };
 
   /*
@@ -301,6 +313,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
 
         if (sisaTahun >= 0 && sisaTahun <= 2) {
           pensiunWatchlist.push({
+            id: p.id,
             nama: p.nama,
             jabatan: p.jabatan,
             sisaTahun,
@@ -316,15 +329,46 @@ export default function DashboardClient({ dataPegawai }: Props) {
     const pangkat = p.pangkat_golongan || "ts";
 
     if (pangkat.startsWith("I/")) {
-      golongan["Gol I"]++;
+      golonganPNS["Gol I"]++;
     } else if (pangkat.startsWith("II/")) {
-      golongan["Gol II"]++;
+      golonganPNS["Gol II"]++;
     } else if (pangkat.startsWith("III/")) {
-      golongan["Gol III"]++;
-    } else if (pangkat.startsWith("IV/")) {
-      golongan["Gol IV"]++;
+      golonganPNS["Gol III"]++;
     } else {
-      golongan.Lainnya++;
+      golonganPNS["Gol IV"]++;
+    }
+
+    // Pastikan nilai pangkat disamakan formatnya (misal: huruf kapital semua)
+    const pangkatBersih = pangkat.trim().toUpperCase();
+
+    switch (pangkatBersih) {
+      case "I":
+        golonganPPPK["I"]++;
+        break;
+      case "IV":
+        golonganPPPK["IV"]++;
+        break;
+      case "V":
+        golonganPPPK["V"]++;
+        break;
+      case "VI":
+        golonganPPPK["VI"]++;
+        break;
+      case "VII":
+        golonganPPPK["VII"]++;
+        break;
+      case "IX":
+        golonganPPPK["IX"]++;
+        break;
+      case "X":
+        golonganPPPK["X"]++;
+        break;
+      case "XI":
+        golonganPPPK["XI"]++;
+        break;
+      default:
+        // Opsional: Tangani jika input tidak sesuai dengan daftar di atas
+        break;
     }
 
     /*
@@ -367,6 +411,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
       cuti.berlebih++;
 
       cutiWatchlist.push({
+        id: p.id,
         nama: p.nama,
         jabatan: p.jabatan,
         total,
@@ -655,7 +700,6 @@ export default function DashboardClient({ dataPegawai }: Props) {
             <div className="relative z-10 flex flex-col lg:flex-row justify-between gap-8">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur mb-4">
-
                   <span className="text-[10px] font-black uppercase tracking-[.2em]">Balai Besar Pelatihan Produktivitas dan Vokasi Makassar</span>
                 </div>
 
@@ -695,8 +739,6 @@ export default function DashboardClient({ dataPegawai }: Props) {
         {/* =====================================================
             FILTER BAR
         ===================================================== */}
-
-
 
         <section className="dashboard-card bg-white rounded-3xl border border-slate-200 shadow-sm p-4 mb-6">
           <div className="flex flex-col lg:flex-row gap-4 justify-between">
@@ -912,11 +954,11 @@ export default function DashboardClient({ dataPegawai }: Props) {
               {(showAllLeave ? cutiWatchlist : cutiWatchlist.slice(0, 6)).map((item, index) => (
                 <div key={`${item.nama}-${index}`} className="group p-3 rounded-2xl bg-sky-50/70 border border-sky-100 hover:bg-sky-100 transition">
                   <div className="flex justify-between gap-3">
-                    <div className="min-w-0">
+                    <Link href={`/admin/data-pegawai/${item.id}`}>
                       <p className="text-xs font-black truncate">{item.nama}</p>
 
                       <p className="text-[9px] text-slate-500 truncate mt-1">{item.jabatan}</p>
-                    </div>
+                    </Link>
 
                     <span className="shrink-0 self-center bg-sky-600 text-white px-2 py-1 rounded-lg text-[9px] font-black">{item.total} hari</span>
                   </div>
@@ -989,11 +1031,11 @@ export default function DashboardClient({ dataPegawai }: Props) {
             {(showAllRetirement ? pensiunWatchlist : pensiunWatchlist.slice(0, 6)).map((item, index) => (
               <div key={`${item.nama}-${index}`} className="group rounded-2xl border border-red-100 bg-red-50/50 p-4 hover:bg-red-50 hover:-translate-y-1 transition-all">
                 <div className="flex justify-between gap-3">
-                  <div className="min-w-0">
+                  <Link href={`/admin/data-pegawai/${item.id}`} className="transition-colors group cursor-pointer border border-transparent ">
                     <p className="font-black text-sm truncate">{item.nama}</p>
 
                     <p className="text-[10px] text-slate-500 truncate mt-1">{item.jabatan}</p>
-                  </div>
+                  </Link>
 
                   <div className={`shrink-0 rounded-xl px-2 py-1.5 text-center ${item.sisaTahun === 0 ? "bg-red-600 text-white" : "bg-orange-500 text-white"}`}>
                     <p className="text-[9px] font-bold">PENSIUN</p>
@@ -1016,15 +1058,15 @@ export default function DashboardClient({ dataPegawai }: Props) {
             GOLONGAN + PENDIDIKAN
         ===================================================== */}
 
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* GOLONGAN */}
 
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-            <SectionTitle color="emerald" title="Demografi Kepangkatan" subtitle="Distribusi ASN berdasarkan golongan." />
+            <SectionTitle color="emerald" title="Demografi Kepangkatan PNS" subtitle="Distribusi ASN berdasarkan golongan." />
 
             <div className="flex items-end gap-4 md:gap-8 h-64 mt-8 border-b border-slate-200">
-              {Object.entries(golongan).map(([label, value]) => {
-                const max = Math.max(...Object.values(golongan), 1);
+              {Object.entries(golonganPNS).map(([label, value]) => {
+                const max = Math.max(...Object.values(golonganPNS), 1);
                 const height = (value / max) * 100;
 
                 return (
@@ -1036,7 +1078,38 @@ export default function DashboardClient({ dataPegawai }: Props) {
 
                       {/* BATANG */}
                       <div
-                        className="column-grow w-full max-w-14 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-xl group-hover:from-[#15406A] group-hover:to-blue-500 transition-all"
+                        className="column-grow w-full max-w-14 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-xl group-hover:from-emerald-800 group-hover:to-emerald-400 transition-all"
+                        style={{
+                          height: `${value > 0 ? Math.max(height, 5) : 0}%`,
+                        }}
+                      />
+                    </div>
+
+                    {/* LABEL */}
+                    <span className="text-[10px] font-bold text-slate-500 py-3">{label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <SectionTitle color="blue" title="Demografi Kepangkatan PPPK" subtitle="Distribusi ASN berdasarkan golongan." />
+
+            <div className="flex items-end gap-4 md:gap-8 h-64 mt-8 border-b border-slate-200">
+              {Object.entries(golonganPPPK).map(([label, value]) => {
+                const max = Math.max(...Object.values(golonganPPPK), 1);
+                const height = (value / max) * 100;
+
+                return (
+                  <div key={label} className="flex-1 h-full flex flex-col justify-end items-center group">
+                    {/* AREA BATANG */}
+                    <div className="relative w-full h-full flex items-end justify-center">
+                      {/* TOOLTIP */}
+                      <span className="absolute bottom-full mb-2 text-xs font-black text-slate-700 opacity-0 group-hover:opacity-100 transition">{value}</span>
+
+                      {/* BATANG */}
+                      <div
+                        className="column-grow w-full max-w-14 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-xl group-hover:from-blue-800 group-hover:to-blue-600 transition-all"
                         style={{
                           height: `${value > 0 ? Math.max(height, 5) : 0}%`,
                         }}
