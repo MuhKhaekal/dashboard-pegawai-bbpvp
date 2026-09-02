@@ -1141,24 +1141,6 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      {/* NOMOR */}
-                      <div
-                        className={`
-                    flex
-                    items-center
-                    justify-center
-                    w-8
-                    h-8
-                    rounded-lg
-                    text-xs
-                    font-black
-                    shrink-0
-                    ${isActive ? "bg-white/15 text-white" : "bg-white text-[#15406A] border border-slate-200"}
-                  `}
-                      >
-                        {index + 1}
-                      </div>
-
                       {/* TEXT */}
                       <div>
                         <div

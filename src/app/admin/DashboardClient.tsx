@@ -222,8 +222,8 @@ export default function DashboardClient({ dataPegawai }: Props) {
     S3: 0,
     S2: 0,
     "S1 / D4": 0,
-    "D1–D3": 0,
-    "SMA / Umum": 0,
+    "D3": 0,
+    "D1 / SMA / Umum": 0,
   };
 
   filteredData.forEach((p) => {
@@ -384,9 +384,9 @@ export default function DashboardClient({ dataPegawai }: Props) {
     } else if (nama.includes(", S.") || nama.includes(",S.") || nama.includes("S.ST") || nama.includes("S.TR")) {
       pendidikan["S1 / D4"]++;
     } else if (nama.includes("A.MD") || nama.includes("A.MA")) {
-      pendidikan["D1–D3"]++;
+      pendidikan["D3"]++;
     } else {
-      pendidikan["SMA / Umum"]++;
+      pendidikan["D1 / SMA / Umum"]++;
     }
 
     /*
