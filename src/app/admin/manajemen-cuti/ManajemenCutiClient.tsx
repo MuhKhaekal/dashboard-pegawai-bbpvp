@@ -3,9 +3,9 @@
 import React, { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import PageLoading from "../../components/PageLoading";
 
 import type { Pegawai } from "./types";
-
 import { simpanCutiTahunan, simpanCutiLainnya, resetCutiPegawai, hapusCuti, bersihkanSemuaCutiPegawai } from "../data-pegawai/actions";
 
 interface ManajemenCutiClientProps {
