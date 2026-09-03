@@ -610,7 +610,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
   */
 
   return (
-    <main className="min-h-screen bg-[#f5f7fb] text-slate-800 overflow-x-hidden">
+    <main className="min-h-screen md:px-24 bg-[#f5f7fb] text-slate-800 overflow-x-hidden">
       {/* =====================================================
           GLOBAL STYLE
       ===================================================== */}
