@@ -56,11 +56,28 @@ export default function DashboardClient({ dataPegawai }: Props) {
   const openDetail = (filter: string, value: string, category?: string) => {
     const params = new URLSearchParams();
 
+    // Filter drill-down yang diklik
     params.set("filter", filter);
     params.set("value", value);
 
     if (category) {
       params.set("category", category);
+    }
+
+    // =====================================================
+    // WARISKAN FILTER DARI DASHBOARD UTAMA
+    // =====================================================
+
+    if (statusFilter !== "Semua") {
+      params.set("baseStatus", statusFilter);
+    }
+
+    if (unitFilter !== "Semua") {
+      params.set("baseUnit", unitFilter);
+    }
+
+    if (search.trim()) {
+      params.set("baseSearch", search.trim());
     }
 
     router.push(`/admin/dashboard-detail?${params.toString()}`);

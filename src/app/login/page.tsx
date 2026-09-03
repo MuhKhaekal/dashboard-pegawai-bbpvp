@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignJWT } from "jose";
+import Link from "next/link";
 
 const SECRET_KEY = new TextEncoder().encode(process.env.JWT_SECRET || "kunci_cadangan");
 
@@ -124,6 +125,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             </svg>
           </button>
         </form>
+        <Link href="/" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full justify-center text-blue-500 border-white/10 backdrop-blur mt-4">
+          <span className="text-[10px] font-black uppercase tracking-[.2em]">Kembali ke Dashboard</span>
+        </Link>
       </div>
 
       {/* Footer Text */}

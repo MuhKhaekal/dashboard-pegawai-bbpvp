@@ -56,6 +56,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
   const openDetail = (filter: string, value: string, category?: string) => {
     const params = new URLSearchParams();
 
+    // Filter drill-down yang diklik
     params.set("filter", filter);
     params.set("value", value);
 
@@ -63,7 +64,31 @@ export default function DashboardClient({ dataPegawai }: Props) {
       params.set("category", category);
     }
 
-    router.push(`/admin/dashboard-detail?${params.toString()}`);
+    // =====================================================
+    // WARISKAN FILTER DARI DASHBOARD UTAMA
+    // =====================================================
+
+    if (statusFilter !== "Semua") {
+      params.set("baseStatus", statusFilter);
+    }
+
+    if (unitFilter !== "Semua") {
+      params.set("baseUnit", unitFilter);
+    }
+
+    if (search.trim()) {
+      params.set("baseSearch", search.trim());
+    }
+
+    router.push(`dashboard-detail?${params.toString()}`);
+  };
+  const openDataPegawai = (filter: string) => {
+    const params = new URLSearchParams();
+
+    // Filter drill-down yang diklik
+    params.set("filter", filter);
+
+    router.push(`data-pegawai`);
   };
   /*
   |--------------------------------------------------------------------------
@@ -610,7 +635,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
   */
 
   return (
-    <main className="min-h-screen md:px-24 bg-[#f5f7fb] text-slate-800 overflow-x-hidden">
+    <main className="min-h-screen bg-[#f5f7fb] text-slate-800 overflow-x-hidden">
       {/* =====================================================
           GLOBAL STYLE
       ===================================================== */}
@@ -702,7 +727,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
         <div className="absolute bottom-0 right-[20%] w-[350px] h-[350px] bg-emerald-300/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative max-w-[1600px] mx-auto px-4 md:px-6 lg:px-10 py-6 lg:py-8">
+      <div className="relative max-w-[1600px] mx-auto px-4 md:px-6 lg:px-24 py-6 lg:py-8">
         {/* =====================================================
             HEADER
         ===================================================== */}
@@ -721,6 +746,9 @@ export default function DashboardClient({ dataPegawai }: Props) {
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight">Dashboard SDM</h1>
 
                 <p className="mt-2 text-blue-100 max-w-2xl text-sm md:text-base">Pusat analitik dan monitoring sumber daya manusia secara real-time.</p>
+                <Link href="/login" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur mt-4">
+                  <span className="text-[10px] font-black uppercase tracking-[.2em]">➡️ Masuk sebagai Administrator</span>
+                </Link>
               </div>
 
               {/* HEALTH SCORE */}
@@ -799,7 +827,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
         ===================================================== */}
 
         <section className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
-          <KpiCard title="Total Pegawai" value={totalPegawai} subtitle="Pegawai terdata" icon="👥" gradient="from-[#15406A] to-[#2876ad]" />
+          <KpiCard title="Total Pegawai" value={totalPegawai} subtitle="Pegawai terdata" icon="👥" gradient="from-[#15406A] to-[#2876ad]" onClick={() => openDataPegawai("")} />
 
           <KpiCard title="PNS" value={totalPNS} subtitle={`${persen(totalPNS)}% dari total`} icon="🛡️" gradient="from-emerald-500 to-teal-600" onClick={() => openDetail("status", "PNS")} />
 
@@ -971,7 +999,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
               {(showAllLeave ? cutiWatchlist : cutiWatchlist.slice(0, 6)).map((item, index) => (
                 <div key={`${item.nama}-${index}`} className="group p-3 rounded-2xl bg-sky-50/70 border border-sky-100 hover:bg-sky-100 transition">
                   <div className="flex justify-between gap-3">
-                    <Link href={`/admin/data-pegawai/${item.id}`}>
+                    <Link href={`data-pegawai/${item.id}`}>
                       <p className="text-xs font-black truncate">{item.nama}</p>
 
                       <p className="text-[9px] text-slate-500 truncate mt-1">{item.jabatan}</p>
@@ -1056,7 +1084,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
             {(showAllRetirement ? pensiunWatchlist : pensiunWatchlist.slice(0, 6)).map((item, index) => (
               <div key={`${item.nama}-${index}`} className="group rounded-2xl border border-red-100 bg-red-50/50 p-4 hover:bg-red-50 hover:-translate-y-1 transition-all">
                 <div className="flex justify-between gap-3">
-                  <Link href={`/admin/data-pegawai/${item.id}`} className="transition-colors group cursor-pointer border border-transparent ">
+                  <Link href={`data-pegawai/${item.id}`} className="transition-colors group cursor-pointer border border-transparent ">
                     <p className="font-black text-sm truncate">{item.nama}</p>
 
                     <p className="text-[10px] text-slate-500 truncate mt-1">{item.jabatan}</p>

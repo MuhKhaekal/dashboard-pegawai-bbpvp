@@ -250,7 +250,7 @@ export default function DashboardDetailClient({ initialData, filter, value, cate
   }, [initialData, filter, value, category, baseStatus, baseUnit, baseSearch, searchQuery]);
 
   return (
-    <main className="min-h-screen bg-slate-50/50 p-4 md:p-6 lg:p-8 font-sans">
+    <main className="min-h-screen bg-slate-50 p-4 md:p-6 md:px-24 font-sans">
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -389,7 +389,7 @@ export default function DashboardDetailClient({ initialData, filter, value, cate
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-50 border border-blue-200 text-[#15406A] flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">{initial}</div>
-                          <Link href={`/admin/data-pegawai/${pegawai.id}`} className="text-sm font-bold text-[#15406A] hover:text-blue-600 hover:underline line-clamp-1">
+                          <Link href={`data-pegawai/${pegawai.id}`} className="text-sm font-bold text-[#15406A] hover:text-blue-600 hover:underline line-clamp-1">
                             {pegawai.nama || "-"}
                           </Link>
                         </div>
@@ -475,7 +475,7 @@ export default function DashboardDetailClient({ initialData, filter, value, cate
             Menampilkan <span className="text-slate-700">{filteredData.length}</span> baris data
           </p>
 
-          <Link href="/admin" className="px-5 py-2.5 rounded-xl bg-[#15406A] text-white text-xs font-bold hover:bg-[#0f2d4a] hover:shadow-lg hover:shadow-blue-900/20 transition-all focus:ring-4 focus:ring-blue-900/10">
+          <Link href="/" className="px-5 py-2.5 rounded-xl bg-[#15406A] text-white text-xs font-bold hover:bg-[#0f2d4a] hover:shadow-lg hover:shadow-blue-900/20 transition-all focus:ring-4 focus:ring-blue-900/10">
             Kembali ke Dashboard Utama
           </Link>
         </div>

@@ -15,8 +15,8 @@ export default function PageLoading({
     <div
       className={
         fullScreen
-          ? "fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 backdrop-blur-sm"
-          : "absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm"
+          ? "fixed inset-0 z-[9999] flex items-center justify-center bg-slate-50/80 backdrop-blur-sm"
+          : "absolute inset-0 z-50 flex items-center justify-center bg-slate-50 backdrop-blur-sm"
       }
     >
       <div className="flex flex-col items-center px-6 text-center">
