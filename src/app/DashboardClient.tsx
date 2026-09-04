@@ -1042,7 +1042,6 @@ export default function DashboardClient({ dataPegawai }: Props) {
             <SectionTitle color="pink" title="Komposisi Gender" subtitle="Berdasarkan digit NIP ASN." />
 
             <div className="flex gap-4 mt-8">
-              <GenderCard label="Laki-Laki" value={gender.laki} percentage={totalASN ? Math.round((gender.laki / totalASN) * 100) : 0} icon="♂" color="blue" />
               <GenderCard label="Laki-Laki" value={gender.laki} percentage={totalASN ? Math.round((gender.laki / totalASN) * 100) : 0} icon="♂" color="blue" onClick={() => openDetail("gender", "L")} />
 
               <GenderCard label="Perempuan" value={gender.perempuan} percentage={totalASN ? Math.round((gender.perempuan / totalASN) * 100) : 0} icon="♀" color="pink" onClick={() => openDetail("gender", "P")} />
