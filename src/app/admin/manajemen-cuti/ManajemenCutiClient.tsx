@@ -7,8 +7,7 @@ import * as XLSX from "xlsx";
 
 import PageLoading from "../../components/PageLoading";
 import type { Pegawai } from "./types";
-
-import { simpanCutiTahunan, simpanCutiLainnya, resetCutiPegawai, hapusCuti, bersihkanSemuaCutiPegawai } from "../data-pegawai/actions";
+import { simpanCutiTahunan, simpanCutiLainnya, resetCutiPegawai, updateKuotaCutiPegawai, hapusCuti, bersihkanSemuaCutiPegawai } from "../data-pegawai/actions";
 
 interface ManajemenCutiClientProps {
   initialData: Pegawai[];
@@ -56,13 +55,14 @@ const JENIS_CUTI = [
 
 type ActiveTable = "asnNonSatpel" | "nonAsnNonSatpel" | "asnSatpel" | "nonAsnSatpel";
 
-type ModalType = "CUTI" | "RESET" | "BERSIHKAN" | null;
+type ModalType = "CUTI" | "RESET" | "BERSIHKAN" | "KUOTA" | null;
 
 type CellTarget = {
   pegawai: Pegawai;
   bulan: number;
   jenis: string;
   nilai: number;
+  keterangan: string;
 };
 
 type TableOption = {
@@ -274,8 +274,11 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
   // =====================================================
   // SISA KUOTA
   //
+  // SUMBER KUOTA:
   // SISA TAHUN LALU + THN 2026
-  // - JANUARI - FEBRUARI - ... - DESEMBER
+  //
+  // SISA KUOTA:
+  // SUMBER KUOTA - TOTAL CUTI TAHUNAN
   // =====================================================
 
   const getSisaKuota = (pegawai: Pegawai) => {
@@ -295,15 +298,22 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
   const openCutiModal = (pegawai: Pegawai, bulan: number, jenis: string) => {
     const nilai = getCellValue(pegawai, bulan, jenis);
 
+    const record = (pegawai.riwayat_cuti || []).find((cuti) => Number(cuti.tahun) === currentYear && Number(cuti.bulan_angka) === bulan && cuti.jenis_cuti === jenis);
+
+    const existingKeterangan = "keterangan" in (record ?? {}) ? String(record?.keterangan ?? "") : "";
+
     setSelectedCell({
       pegawai,
       bulan,
       jenis,
       nilai,
+      keterangan: existingKeterangan,
     });
 
-    setDurasi("");
-    setKeterangan("");
+    setDurasi(nilai > 0 ? String(nilai) : "");
+
+    setKeterangan(existingKeterangan);
+
     setModalType("CUTI");
   };
 
@@ -317,6 +327,7 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
       bulan: 0,
       jenis: "",
       nilai: 0,
+      keterangan: "",
     });
 
     setCutiTahunIni(Number(pegawai.cuti_tahun_ini) || 0);
@@ -324,6 +335,79 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
     setSisaLalu(Number(pegawai.sisa_cuti_tahun_lalu) || 0);
 
     setModalType("RESET");
+  };
+
+  // =====================================================
+  // BUKA MODAL EDIT KUOTA
+  // =====================================================
+
+  const openQuotaModal = (pegawai: Pegawai) => {
+    setSelectedCell({
+      pegawai,
+      bulan: 0,
+      jenis: "",
+      nilai: 0,
+      keterangan: "",
+    });
+
+    setSisaLalu(Number(pegawai.sisa_cuti_tahun_lalu) || 0);
+
+    setCutiTahunIni(Number(pegawai.cuti_tahun_ini) || 0);
+
+    setModalType("KUOTA");
+  };
+
+  // =====================================================
+  // SIMPAN EDIT KUOTA
+  // =====================================================
+
+  const handleSaveQuota = async () => {
+    if (!selectedCell) {
+      return;
+    }
+
+    const tahunLalu = Number(sisaLalu);
+
+    const tahunIni = Number(cutiTahunIni);
+
+    if (!Number.isInteger(tahunLalu) || tahunLalu < 0) {
+      alert("Sisa cuti tahun lalu harus berupa angka bulat dan tidak boleh negatif.");
+      return;
+    }
+
+    if (!Number.isInteger(tahunIni) || tahunIni < 0) {
+      alert(`Kuota tahun ${currentYear} harus berupa angka bulat dan tidak boleh negatif.`);
+      return;
+    }
+
+    const totalKuotaBaru = tahunLalu + tahunIni;
+
+    const totalCutiTahunan = getTotalCutiTahunan(selectedCell.pegawai);
+
+    if (totalKuotaBaru < totalCutiTahunan) {
+      alert(`Kuota baru tidak dapat disimpan karena total kuota hanya ${totalKuotaBaru} hari, sedangkan cuti tahunan yang sudah digunakan adalah ${totalCutiTahunan} hari.`);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await updateKuotaCutiPegawai(selectedCell.pegawai.id, tahunIni, tahunLalu);
+
+      if (!result.success) {
+        alert(result.message || "Gagal memperbarui kuota cuti.");
+        return;
+      }
+
+      closeModal();
+      router.refresh();
+    } catch (error: unknown) {
+      console.error("Gagal memperbarui kuota:", error);
+
+      alert("Terjadi kesalahan saat memperbarui kuota cuti.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // =====================================================
@@ -336,6 +420,7 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
       bulan: 0,
       jenis: "",
       nilai: 0,
+      keterangan: "",
     });
 
     setModalType("BERSIHKAN");
@@ -352,27 +437,34 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
 
     const jumlah = Number(durasi);
 
-    if (!jumlah || jumlah <= 0) {
-      alert("Durasi cuti harus lebih dari 0 hari.");
+    if (!Number.isInteger(jumlah) || jumlah <= 0) {
+      alert("Durasi cuti harus berupa angka bulat lebih dari 0 hari.");
       return;
     }
 
     const pegawai = selectedCell.pegawai;
 
-    // Untuk validasi, gunakan kuota sumber
-    // tanpa mengubah nilai sisa_tahun_lalu
-    // dan cuti_tahun_ini di database.
-    const totalKuota = Number(pegawai.cuti_tahun_ini) + Number(pegawai.sisa_cuti_tahun_lalu);
+    const totalKuota = (Number(pegawai.sisa_cuti_tahun_lalu) || 0) + (Number(pegawai.cuti_tahun_ini) || 0);
+
+    // ===================================================
+    // VALIDASI CUTI TAHUNAN
+    //
+    // Nilai lama dikembalikan terlebih dahulu
+    // agar ketika edit 3 menjadi 2, hasilnya 2,
+    // bukan 5.
+    // ===================================================
 
     if (selectedCell.jenis === "Tahunan") {
       const cutiLama = selectedCell.nilai;
 
-      const sisaKuotaSaatIni = totalKuota - getTotalCutiTahunan(pegawai);
+      const totalCutiSaatIni = getTotalCutiTahunan(pegawai);
 
-      const sisaSetelahMengembalikanCell = sisaKuotaSaatIni + cutiLama;
+      const sisaKuotaSaatIni = totalKuota - totalCutiSaatIni;
 
-      if (jumlah > sisaSetelahMengembalikanCell) {
-        alert(`Kuota tidak cukup. Sisa kuota yang tersedia: ${sisaSetelahMengembalikanCell} hari.`);
+      const sisaSetelahCell = sisaKuotaSaatIni + cutiLama;
+
+      if (jumlah > sisaSetelahCell) {
+        alert(`Kuota tidak cukup. Sisa kuota yang tersedia untuk sel ini: ${sisaSetelahCell} hari.`);
         return;
       }
     }
@@ -384,7 +476,7 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
         const result = await simpanCutiTahunan(pegawai.id, selectedCell.bulan, currentYear, jumlah);
 
         if (!result.success) {
-          alert(result.message || "Gagal menyimpan cuti.");
+          alert(result.message || "Gagal menyimpan cuti tahunan.");
           return;
         }
       } else {
@@ -398,7 +490,7 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
 
         formData.append("durasi", String(jumlah));
 
-        formData.append("keterangan", keterangan);
+        formData.append("keterangan", keterangan.trim());
 
         const result = await simpanCutiLainnya(formData);
 
@@ -410,8 +502,8 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
 
       closeModal();
       router.refresh();
-    } catch (error) {
-      console.error(error);
+    } catch (error: unknown) {
+      console.error("Gagal menyimpan cuti:", error);
 
       alert("Terjadi kesalahan saat menyimpan cuti.");
     } finally {
@@ -428,10 +520,19 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
       return;
     }
 
+    const tahunIni = Number(cutiTahunIni);
+
+    const tahunLalu = Number(sisaLalu);
+
+    if (!Number.isInteger(tahunIni) || tahunIni < 0 || !Number.isInteger(tahunLalu) || tahunLalu < 0) {
+      alert("Nilai kuota harus berupa angka bulat dan tidak boleh negatif.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const result = await resetCutiPegawai(selectedCell.pegawai.id, Number(cutiTahunIni), Number(sisaLalu));
+      const result = await resetCutiPegawai(selectedCell.pegawai.id, tahunIni, tahunLalu);
 
       if (!result.success) {
         alert(result.message || "Gagal mereset kuota.");
@@ -440,8 +541,8 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
 
       closeModal();
       router.refresh();
-    } catch (error) {
-      console.error(error);
+    } catch (error: unknown) {
+      console.error("Gagal reset kuota:", error);
 
       alert("Terjadi kesalahan saat reset kuota.");
     } finally {
@@ -472,8 +573,8 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
 
       closeModal();
       router.refresh();
-    } catch (error) {
-      console.error(error);
+    } catch (error: unknown) {
+      console.error("Gagal menghapus data cuti:", error);
 
       alert("Terjadi kesalahan saat menghapus data cuti.");
     } finally {
@@ -502,8 +603,8 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
 
       closeModal();
       router.refresh();
-    } catch (error) {
-      console.error(error);
+    } catch (error: unknown) {
+      console.error("Gagal membersihkan data cuti:", error);
 
       alert("Terjadi kesalahan saat membersihkan data cuti.");
     } finally {
@@ -518,15 +619,16 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
   const closeModal = () => {
     setModalType(null);
     setSelectedCell(null);
+
     setDurasi("");
     setKeterangan("");
+
+    setCutiTahunIni(12);
+    setSisaLalu(0);
   };
 
   // =====================================================
   // DOWNLOAD EXCEL
-  //
-  // HANYA DATA ACTIVE TABLE
-  // + MENGIKUTI SEARCH
   // =====================================================
 
   const handleDownloadExcel = () => {
@@ -566,7 +668,6 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
 
-    // Lebar kolom dasar
     worksheet["!cols"] = [
       { wch: 6 },
       { wch: 22 },
@@ -583,7 +684,6 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
       { wch: 16 },
     ];
 
-    // Freeze baris pertama
     worksheet["!freeze"] = {
       xSplit: 0,
       ySplit: 1,
@@ -593,9 +693,7 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
 
     XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Cuti");
 
-    const safeLabel = activeTableData.shortLabel;
-
-    XLSX.writeFile(workbook, `rekap-cuti-${safeLabel}-${currentYear}.xlsx`);
+    XLSX.writeFile(workbook, `rekap-cuti-${activeTableData.shortLabel}-${currentYear}.xlsx`);
   };
 
   // =====================================================
@@ -612,7 +710,7 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
           <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#15406A]/10 text-[#15406A] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-[#15406A]/10 text-[#15406A] flex items-center justify-center shrink-0">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M5 6h14M7 14h10M9 18h6" />
                   </svg>
@@ -666,8 +764,10 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                 <th
                   rowSpan={2}
                   className="
-                    sticky left-0 z-50
+                    sticky
+                    left-0
                     top-0
+                    z-[60]
                     bg-white
                     border border-slate-300
                     px-3
@@ -683,8 +783,10 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                 <th
                   rowSpan={2}
                   className="
-                    sticky left-12 z-50
+                    sticky
+                    left-12
                     top-0
+                    z-[60]
                     bg-white
                     border border-slate-300
                     px-3
@@ -700,8 +802,10 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                 <th
                   rowSpan={2}
                   className="
-                    sticky left-[198px] z-50
+                    sticky
+                    left-[198px]
                     top-0
+                    z-[60]
                     bg-white
                     border border-slate-300
                     px-3
@@ -717,14 +821,16 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                 <th
                   rowSpan={2}
                   className="
-                  sticky 
-                    border border-slate-300
+                    sticky
+                    left-[418px]
                     top-0
+                    z-[60]
+                    bg-slate-50
+                    border border-slate-300
                     px-3
-                    min-w-[80px]
+                    min-w-[90px]
                     text-center
                     font-black
-                    bg-slate-50
                   "
                 >
                   SISA
@@ -736,14 +842,16 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                 <th
                   rowSpan={2}
                   className="
-                  sticky
-                    border border-slate-300
+                    sticky
+                    left-[508px]
                     top-0
+                    z-[60]
+                    bg-slate-50
+                    border border-slate-300
                     px-3
-                    min-w-[70px]
+                    min-w-[75px]
                     text-center
                     font-black
-                    bg-slate-50
                   "
                 >
                   THN
@@ -757,10 +865,11 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                     key={bulan.angka}
                     colSpan={JENIS_CUTI.length}
                     className="
-                      sticky
-                        border border-slate-300
+                        sticky
                         top-0
+                        z-40
                         bg-slate-50
+                        border border-slate-300
                         px-2
                         py-2
                         text-center
@@ -775,13 +884,15 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                 <th
                   rowSpan={2}
                   className="
-                    sticky right-[100px] z-50
+                    sticky
+                    right-[100px]
+                    top-0
+                    z-[60]
+                    bg-emerald-50
                     border border-slate-300
                     px-3
-                    top-0
                     text-center
                     font-black
-                    bg-emerald-50
                     min-w-[100px]
                   "
                 >
@@ -794,13 +905,15 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                 <th
                   rowSpan={2}
                   className="
-                    sticky right-0 z-50
-                    border border-slate-300
+                    sticky
+                    right-0
                     top-0
+                    z-[60]
+                    bg-red-50
+                    border border-slate-300
                     px-3
                     text-center
                     font-black
-                    bg-red-50
                     min-w-[100px]
                   "
                 >
@@ -816,10 +929,11 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       <th
                         key={`${bulan.angka}-${jenis.key}`}
                         className="
-                        sticky
-                              border border-slate-300
-                              bg-white
+                              sticky
                               top-10
+                              z-40
+                              bg-white
+                              border border-slate-300
                               px-2
                               py-2
                               text-center
@@ -874,7 +988,9 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       {/* NO */}
                       <td
                         className="
-                            sticky left-0 z-30
+                            sticky
+                            left-0
+                            z-30
                             bg-white
                             border border-slate-300
                             px-2
@@ -889,7 +1005,9 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       {/* NIP */}
                       <td
                         className="
-                            sticky left-12 z-30
+                            sticky
+                            left-12
+                            z-30
                             bg-white
                             border border-slate-300
                             px-2
@@ -904,7 +1022,9 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       {/* NAMA */}
                       <td
                         className="
-                            sticky left-[198px] z-30
+                            sticky
+                            left-[198px]
+                            z-30
                             bg-white
                             border border-slate-300
                             px-2
@@ -919,26 +1039,76 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
 
                       {/* SISA TAHUN LALU */}
                       <td
+                        onClick={() => openQuotaModal(pegawai)}
                         className="
+                            sticky
+                            left-[418px]
+                            z-30
                             border border-slate-300
                             text-center
                             font-bold
                             bg-slate-50
+                            cursor-pointer
+                            hover:bg-blue-100
+                            hover:text-[#15406A]
+                            transition-colors
+                            min-w-[90px]
                           "
+                        title="Klik untuk mengubah sisa cuti tahun lalu"
                       >
-                        {pegawai.sisa_cuti_tahun_lalu}
+                        <span
+                          className="
+                              inline-flex
+                              items-center
+                              justify-center
+                              min-w-8
+                              h-7
+                              px-2
+                              rounded-lg
+                              bg-white
+                              border
+                              border-slate-200
+                            "
+                        >
+                          {pegawai.sisa_cuti_tahun_lalu}
+                        </span>
                       </td>
 
                       {/* THN 2026 */}
                       <td
+                        onClick={() => openQuotaModal(pegawai)}
                         className="
+                            sticky
+                            left-[508px]
+                            z-30
                             border border-slate-300
                             text-center
                             font-bold
                             bg-slate-50
+                            cursor-pointer
+                            hover:bg-blue-100
+                            hover:text-[#15406A]
+                            transition-colors
+                            min-w-[75px]
                           "
+                        title={`Klik untuk mengubah kuota cuti ${currentYear}`}
                       >
-                        {pegawai.cuti_tahun_ini}
+                        <span
+                          className="
+                              inline-flex
+                              items-center
+                              justify-center
+                              min-w-8
+                              h-7
+                              px-2
+                              rounded-lg
+                              bg-white
+                              border
+                              border-slate-200
+                            "
+                        >
+                          {pegawai.cuti_tahun_ini}
+                        </span>
                       </td>
 
                       {/* SEMUA BULAN */}
@@ -991,7 +1161,9 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       {/* SISA KUOTA */}
                       <td
                         className="
-                            sticky right-[100px] z-30
+                            sticky
+                            right-[100px]
+                            z-30
                             border border-slate-300
                             text-center
                             font-black
@@ -1005,7 +1177,9 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       {/* ACTION */}
                       <td
                         className="
-                            sticky right-0 z-30
+                            sticky
+                            right-0
+                            z-30
                             border border-slate-300
                             text-center
                             bg-red-50
@@ -1170,34 +1344,51 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
         ===================================================== */}
 
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Kelompok Pegawai</p>
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+            {/* HEADING */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#15406A]/10 text-[#15406A] flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a4 4 0 0 0-4-4h-1M9 20H4v-2a4 4 0 0 1 4-4h1m8-4a4 4 0 1 0-8 0 4 4 0 0 0 8 0zM9 10a4 4 0 1 0-8 0 4 4 0 0 0 8 0z" />
+                </svg>
+              </div>
 
-              <h2 className="text-sm font-black text-slate-800 mt-1">Pilih data yang ingin ditampilkan</h2>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Kelompok Pegawai</p>
+
+                <h2 className="text-sm font-black text-slate-800 mt-0.5">Pilih data yang ingin ditampilkan</h2>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 w-full lg:w-auto">
-              {tableOptions.map((option) => {
-                const isActive = activeTable === option.key;
+            {/* TABS */}
+            <div className="w-full xl:w-auto">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
+                {tableOptions.map((option) => {
+                  const isActive = activeTable === option.key;
 
-                return (
-                  <button
-                    key={option.key}
-                    type="button"
-                    onClick={() => setActiveTable(option.key)}
-                    className={`
-                        px-4
-                        py-3
-                        rounded-xl
-                        border
-                        text-left
-                        transition-all
-                        ${isActive ? "bg-[#15406A] border-[#15406A] text-white shadow-md" : "bg-white border-slate-200 text-slate-600 hover:border-[#15406A]/40 hover:bg-slate-50"}
-                      `}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-black">{option.label}</span>
+                  return (
+                    <button
+                      key={option.key}
+                      type="button"
+                      onClick={() => setActiveTable(option.key)}
+                      aria-pressed={isActive}
+                      className={`
+                          group
+                          relative
+                          flex
+                          items-center
+                          justify-between
+                          gap-3
+                          px-3
+                          py-2.5
+                          rounded-xl
+                          border
+                          transition-all
+                          duration-200
+                          ${isActive ? "bg-[#15406A] border-[#15406A] text-white shadow-sm" : "bg-transparent border-transparent text-slate-600 hover:bg-white hover:border-slate-200 hover:text-[#15406A]"}
+                        `}
+                    >
+                      <span className="text-[10px] sm:text-[11px] font-black uppercase whitespace-nowrap">{option.shortLabel}</span>
 
                       <span
                         className={`
@@ -1210,15 +1401,16 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                             justify-center
                             text-[10px]
                             font-black
-                            ${isActive ? "bg-white/15 text-white" : "bg-slate-100 text-slate-500"}
+                            transition-colors
+                            ${isActive ? "bg-white/15 text-white" : "bg-white text-slate-500 border border-slate-200 group-hover:text-[#15406A]"}
                           `}
                       >
                         {option.data.length}
                       </span>
-                    </div>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -1262,18 +1454,17 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                   shadow-2xl
                   w-full
                   max-w-md
+                  max-h-[90vh]
                   overflow-hidden
+                  flex
+                  flex-col
                 "
               >
-                {/* MODAL HEADER */}
-                <div
-                  className="
-                    px-6
-                    py-5
-                    border-b
-                    border-slate-100
-                  "
-                >
+                {/* =================================================
+                    MODAL HEADER
+                ================================================= */}
+
+                <div className="px-6 py-5 border-b border-slate-100 shrink-0">
                   {modalType === "CUTI" && (
                     <>
                       <h2 className="text-lg font-black text-[#15406A]">Catat Cuti</h2>
@@ -1290,6 +1481,14 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                     </>
                   )}
 
+                  {modalType === "KUOTA" && (
+                    <>
+                      <h2 className="text-lg font-black text-[#15406A]">Edit Kuota Cuti</h2>
+
+                      <p className="text-xs text-slate-500 mt-1">{selectedCell.pegawai.nama}</p>
+                    </>
+                  )}
+
                   {modalType === "BERSIHKAN" && (
                     <>
                       <h2 className="text-lg font-black text-red-600">Bersihkan Data Cuti</h2>
@@ -1299,8 +1498,15 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                   )}
                 </div>
 
-                {/* MODAL BODY */}
-                <div className="p-6">
+                {/* =================================================
+                    MODAL BODY
+                ================================================= */}
+
+                <div className="p-6 overflow-y-auto">
+                  {/* ==============================
+                      CUTI
+                  ============================== */}
+
                   {modalType === "CUTI" && (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-3">
@@ -1329,6 +1535,7 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                         <input
                           type="number"
                           min={1}
+                          step={1}
                           value={durasi}
                           onChange={(e) => setDurasi(e.target.value)}
                           placeholder="Contoh: 3"
@@ -1381,8 +1588,8 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       )}
 
                       {selectedCell.jenis === "Tahunan" && (
-                        <div className="px-4 py-3 rounded-xl bg-blue-50 text-xs">
-                          <div className="flex justify-between items-center">
+                        <div className="px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 text-xs">
+                          <div className="flex justify-between items-center gap-3">
                             <span className="text-slate-500">Sisa kuota saat ini</span>
 
                             <b className="text-[#15406A] text-base">{getSisaKuota(selectedCell.pegawai)} hari</b>
@@ -1394,18 +1601,26 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                     </div>
                   )}
 
+                  {/* ==============================
+                      RESET
+                  ============================== */}
+
                   {modalType === "RESET" && (
                     <div className="space-y-4">
-                      <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-xs text-red-700">Reset akan mengubah kuota utama pegawai. Gunakan hanya jika terdapat kesalahan pencatatan.</div>
+                      <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-xs text-red-700">
+                        <b>Reset Kuota</b>
+                        <p className="mt-1 leading-relaxed">Gunakan fitur ini apabila ingin mengembalikan atau menetapkan ulang nilai kuota pegawai.</p>
+                      </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">Kuota Tahun Ini</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1.5">Kuota Tahun Ini</label>
 
                         <input
                           type="number"
                           min={0}
+                          step={1}
                           value={cutiTahunIni}
-                          onChange={(e) => setCutiTahunIni(Number(e.target.value))}
+                          onChange={(e) => setCutiTahunIni(e.target.value === "" ? 0 : Math.max(0, Number(e.target.value)))}
                           className="
                             w-full
                             px-4
@@ -1413,8 +1628,10 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                             rounded-xl
                             border
                             border-slate-200
+                            bg-slate-50
                             font-bold
                             outline-none
+                            focus:bg-white
                             focus:border-red-500
                             focus:ring-2
                             focus:ring-red-100
@@ -1423,13 +1640,14 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">Sisa Cuti Tahun Lalu</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1.5">Sisa Cuti Tahun Lalu</label>
 
                         <input
                           type="number"
                           min={0}
+                          step={1}
                           value={sisaLalu}
-                          onChange={(e) => setSisaLalu(Number(e.target.value))}
+                          onChange={(e) => setSisaLalu(e.target.value === "" ? 0 : Math.max(0, Number(e.target.value)))}
                           className="
                             w-full
                             px-4
@@ -1437,8 +1655,10 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                             rounded-xl
                             border
                             border-slate-200
+                            bg-slate-50
                             font-bold
                             outline-none
+                            focus:bg-white
                             focus:border-red-500
                             focus:ring-2
                             focus:ring-red-100
@@ -1447,6 +1667,161 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       </div>
                     </div>
                   )}
+
+                  {/* ==============================
+                      KUOTA
+                  ============================== */}
+
+                  {modalType === "KUOTA" && (
+                    <div className="space-y-5">
+                      {/* INFO */}
+                      <div className="rounded-xl bg-blue-50 border border-blue-100 p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-[#15406A]/10 flex items-center justify-center shrink-0">
+                            <svg className="w-5 h-5 text-[#15406A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V5m0 9v5m-7-5h3m8 0h3" />
+                            </svg>
+                          </div>
+
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-[#15406A]">Sumber Kuota</p>
+
+                            <p className="text-sm font-black text-slate-800 mt-0.5">Atur kuota cuti pegawai</p>
+
+                            <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">Ubah nilai sumber kuota tanpa menghapus riwayat cuti yang sudah tercatat.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* TAHUN LALU */}
+                      <div>
+                        <label htmlFor="sisa-cuti-tahun-lalu" className="block text-xs font-bold text-slate-600 mb-1.5">
+                          Sisa Cuti Tahun Lalu
+                        </label>
+
+                        <div className="relative">
+                          <input
+                            id="sisa-cuti-tahun-lalu"
+                            type="number"
+                            min={0}
+                            step={1}
+                            value={sisaLalu}
+                            onChange={(event) => {
+                              const value = event.target.value;
+
+                              setSisaLalu(value === "" ? 0 : Math.max(0, Number(value)));
+                            }}
+                            className="
+                              w-full
+                              px-4
+                              py-3
+                              pr-16
+                              rounded-xl
+                              border
+                              border-slate-200
+                              bg-slate-50
+                              font-bold
+                              text-slate-800
+                              outline-none
+                              focus:bg-white
+                              focus:border-[#15406A]
+                              focus:ring-2
+                              focus:ring-blue-100
+                              transition
+                            "
+                          />
+
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">hari</span>
+                        </div>
+                      </div>
+
+                      {/* TAHUN BERJALAN */}
+                      <div>
+                        <label htmlFor="cuti-tahun-berjalan" className="block text-xs font-bold text-slate-600 mb-1.5">
+                          Kuota Cuti Tahun {currentYear}
+                        </label>
+
+                        <div className="relative">
+                          <input
+                            id="cuti-tahun-berjalan"
+                            type="number"
+                            min={0}
+                            step={1}
+                            value={cutiTahunIni}
+                            onChange={(event) => {
+                              const value = event.target.value;
+
+                              setCutiTahunIni(value === "" ? 0 : Math.max(0, Number(value)));
+                            }}
+                            className="
+                              w-full
+                              px-4
+                              py-3
+                              pr-16
+                              rounded-xl
+                              border
+                              border-slate-200
+                              bg-slate-50
+                              font-bold
+                              text-slate-800
+                              outline-none
+                              focus:bg-white
+                              focus:border-[#15406A]
+                              focus:ring-2
+                              focus:ring-blue-100
+                              transition
+                            "
+                          />
+
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">hari</span>
+                        </div>
+                      </div>
+
+                      {/* RINGKASAN */}
+                      <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-3">Ringkasan Kuota</p>
+
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-xs text-slate-500">Total sumber kuota</span>
+
+                            <span className="text-sm font-black text-[#15406A]">{sisaLalu + cutiTahunIni} hari</span>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-xs text-slate-500">Sudah digunakan</span>
+
+                            <span className="text-sm font-black text-slate-700">{getTotalCutiTahunan(selectedCell.pegawai)} hari</span>
+                          </div>
+
+                          <div className="border-t border-slate-200 pt-3 flex items-center justify-between gap-3">
+                            <span className="text-xs font-bold text-slate-600">Sisa setelah pemakaian</span>
+
+                            <span
+                              className={`
+                                text-lg
+                                font-black
+                                ${sisaLalu + cutiTahunIni - getTotalCutiTahunan(selectedCell.pegawai) < 0 ? "text-red-600" : "text-emerald-600"}
+                              `}
+                            >
+                              {sisaLalu + cutiTahunIni - getTotalCutiTahunan(selectedCell.pegawai)} hari
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* CATATAN */}
+                      <div className="rounded-xl bg-amber-50 border border-amber-100 p-3">
+                        <p className="text-[10px] leading-relaxed text-amber-700">
+                          <b>Catatan:</b> perubahan ini hanya mengubah sumber kuota. Riwayat cuti yang sudah dicatat tetap dipertahankan.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ==============================
+                      BERSIHKAN
+                  ============================== */}
 
                   {modalType === "BERSIHKAN" && (
                     <div className="space-y-4">
@@ -1465,14 +1840,18 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       </div>
 
                       <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-xs text-red-600">
-                        <b>Perhatian:</b> Tindakan ini tidak digunakan untuk mengubah kuota utama. Data sumber kuota tetap mengikuti nilai yang tersimpan pada pegawai.
+                        <b>Perhatian:</b> tindakan ini hanya menghapus riwayat cuti. Data sumber kuota pegawai tidak akan diubah.
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* MODAL FOOTER */}
-                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3">
+                {/* =================================================
+                    MODAL FOOTER
+                ================================================= */}
+
+                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 shrink-0">
+                  {/* BATAL */}
                   <button
                     type="button"
                     disabled={isLoading}
@@ -1483,16 +1862,21 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       py-3
                       rounded-xl
                       bg-white
-                      border
-                      border-slate-200
+                      border border-slate-200
                       font-bold
                       text-slate-600
                       hover:bg-slate-100
+                      disabled:opacity-50
+                      disabled:cursor-not-allowed
                       transition
                     "
                   >
                     Batal
                   </button>
+
+                  {/* ==============================
+                      CUTI
+                  ============================== */}
 
                   {modalType === "CUTI" && (
                     <>
@@ -1509,6 +1893,8 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                             text-red-600
                             font-bold
                             hover:bg-red-200
+                            disabled:opacity-50
+                            disabled:cursor-not-allowed
                             transition
                           "
                         >
@@ -1528,7 +1914,9 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                           bg-[#15406A]
                           text-white
                           font-bold
-                          hover:bg-blue-900
+                          hover:bg-[#103653]
+                          disabled:opacity-50
+                          disabled:cursor-not-allowed
                           transition
                         "
                       >
@@ -1536,6 +1924,37 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                       </button>
                     </>
                   )}
+
+                  {/* ==============================
+                      KUOTA
+                  ============================== */}
+
+                  {modalType === "KUOTA" && (
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={handleSaveQuota}
+                      className="
+                        flex-1
+                        px-4
+                        py-3
+                        rounded-xl
+                        bg-[#15406A]
+                        text-white
+                        font-bold
+                        hover:bg-[#103653]
+                        disabled:opacity-50
+                        disabled:cursor-not-allowed
+                        transition
+                      "
+                    >
+                      {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                    </button>
+                  )}
+
+                  {/* ==============================
+                      RESET
+                  ============================== */}
 
                   {modalType === "RESET" && (
                     <button
@@ -1551,12 +1970,18 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                         text-white
                         font-bold
                         hover:bg-red-700
+                        disabled:opacity-50
+                        disabled:cursor-not-allowed
                         transition
                       "
                     >
                       {isLoading ? "Mereset..." : "Reset Sekarang"}
                     </button>
                   )}
+
+                  {/* ==============================
+                      BERSIHKAN
+                  ============================== */}
 
                   {modalType === "BERSIHKAN" && (
                     <button
@@ -1572,6 +1997,8 @@ export default function ManajemenCutiClient({ initialData }: ManajemenCutiClient
                         text-white
                         font-bold
                         hover:bg-red-700
+                        disabled:opacity-50
+                        disabled:cursor-not-allowed
                         transition
                       "
                     >
