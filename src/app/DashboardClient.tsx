@@ -368,49 +368,55 @@ export default function DashboardClient({ dataPegawai }: Props) {
 
     const pangkat = p.pangkat_golongan || "ts";
 
-    if (pangkat.startsWith("I/")) {
-      golonganPNS["Gol I"]++;
-    } else if (pangkat.startsWith("II/")) {
-      golonganPNS["Gol II"]++;
-    } else if (pangkat.startsWith("III/")) {
-      golonganPNS["Gol III"]++;
-    } else {
-      golonganPNS["Gol IV"]++;
+    if (p.status_kepegawaian === "PNS") {
+      if (pangkat.startsWith("I/")) {
+        golonganPNS["Gol I"]++;
+      } else if (pangkat.startsWith("II/")) {
+        golonganPNS["Gol II"]++;
+      } else if (pangkat.startsWith("III/")) {
+        golonganPNS["Gol III"]++;
+      } else if (pangkat.startsWith("IV/")) {
+        golonganPNS["Gol IV"]++;
+      }
     }
-
     // Pastikan nilai pangkat disamakan formatnya (misal: huruf kapital semua)
     const pangkatBersih = pangkat.trim().toUpperCase();
 
-    switch (pangkatBersih) {
-      case "I":
-        golonganPPPK["I"]++;
-        break;
-      case "IV":
-        golonganPPPK["IV"]++;
-        break;
-      case "V":
-        golonganPPPK["V"]++;
-        break;
-      case "VI":
-        golonganPPPK["VI"]++;
-        break;
-      case "VII":
-        golonganPPPK["VII"]++;
-        break;
-      case "IX":
-        golonganPPPK["IX"]++;
-        break;
-      case "X":
-        golonganPPPK["X"]++;
-        break;
-      case "XI":
-        golonganPPPK["XI"]++;
-        break;
-      default:
-        // Opsional: Tangani jika input tidak sesuai dengan daftar di atas
-        break;
-    }
+    if (p.status_kepegawaian === "PPPK") {
+      switch (pangkat) {
+        case "I":
+          golonganPPPK.I++;
+          break;
 
+        case "IV":
+          golonganPPPK.IV++;
+          break;
+
+        case "V":
+          golonganPPPK.V++;
+          break;
+
+        case "VI":
+          golonganPPPK.VI++;
+          break;
+
+        case "VII":
+          golonganPPPK.VII++;
+          break;
+
+        case "IX":
+          golonganPPPK.IX++;
+          break;
+
+        case "X":
+          golonganPPPK.X++;
+          break;
+
+        case "XI":
+          golonganPPPK.XI++;
+          break;
+      }
+    }
     /*
      * PENDIDIKAN
      */
@@ -601,11 +607,11 @@ export default function DashboardClient({ dataPegawai }: Props) {
   });
 
   filteredData.forEach((p) => {
-    if (p.status_kepegawaian !== "PNS") return;
+    const jabatan = String(p.jabatan || "").trim();
 
-    const jabatan = p.jabatan || "";
-
-    if (!PELAKSANA.includes(jabatan)) return;
+    if (!PELAKSANA.includes(jabatan)) {
+      return;
+    }
 
     if (SATPEL_DAERAH.includes(p.bidang)) {
       pelaksanaStats[jabatan].satpel++;
@@ -1153,7 +1159,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
                 const height = (value / max) * 100;
 
                 return (
-                  <div key={label} className="flex-1 h-full flex flex-col justify-end items-center group cursor-pointer" onClick={() => openDetail("golongan", label)}>
+                  <div key={label} className="flex-1 h-full flex flex-col justify-end items-center group cursor-pointer" onClick={() => openDetail("golongan-pppk", label)}>
                     {/* AREA BATANG */}
                     <div className="relative w-full h-full flex items-end justify-center">
                       {/* TOOLTIP */}

@@ -80,7 +80,15 @@ export default function DashboardClient({ dataPegawai }: Props) {
       params.set("baseSearch", search.trim());
     }
 
-    router.push(`/admin/dashboard-detail?${params.toString()}`);
+    router.push(`dashboard-detail?${params.toString()}`);
+  };
+  const openDataPegawai = (filter: string) => {
+    const params = new URLSearchParams();
+
+    // Filter drill-down yang diklik
+    params.set("filter", filter);
+
+    router.push(`admin/data-pegawai`);
   };
   /*
   |--------------------------------------------------------------------------
@@ -360,49 +368,55 @@ export default function DashboardClient({ dataPegawai }: Props) {
 
     const pangkat = p.pangkat_golongan || "ts";
 
-    if (pangkat.startsWith("I/")) {
-      golonganPNS["Gol I"]++;
-    } else if (pangkat.startsWith("II/")) {
-      golonganPNS["Gol II"]++;
-    } else if (pangkat.startsWith("III/")) {
-      golonganPNS["Gol III"]++;
-    } else {
-      golonganPNS["Gol IV"]++;
+    if (p.status_kepegawaian === "PNS") {
+      if (pangkat.startsWith("I/")) {
+        golonganPNS["Gol I"]++;
+      } else if (pangkat.startsWith("II/")) {
+        golonganPNS["Gol II"]++;
+      } else if (pangkat.startsWith("III/")) {
+        golonganPNS["Gol III"]++;
+      } else if (pangkat.startsWith("IV/")) {
+        golonganPNS["Gol IV"]++;
+      }
     }
-
     // Pastikan nilai pangkat disamakan formatnya (misal: huruf kapital semua)
     const pangkatBersih = pangkat.trim().toUpperCase();
 
-    switch (pangkatBersih) {
-      case "I":
-        golonganPPPK["I"]++;
-        break;
-      case "IV":
-        golonganPPPK["IV"]++;
-        break;
-      case "V":
-        golonganPPPK["V"]++;
-        break;
-      case "VI":
-        golonganPPPK["VI"]++;
-        break;
-      case "VII":
-        golonganPPPK["VII"]++;
-        break;
-      case "IX":
-        golonganPPPK["IX"]++;
-        break;
-      case "X":
-        golonganPPPK["X"]++;
-        break;
-      case "XI":
-        golonganPPPK["XI"]++;
-        break;
-      default:
-        // Opsional: Tangani jika input tidak sesuai dengan daftar di atas
-        break;
-    }
+    if (p.status_kepegawaian === "PPPK") {
+      switch (pangkat) {
+        case "I":
+          golonganPPPK.I++;
+          break;
 
+        case "IV":
+          golonganPPPK.IV++;
+          break;
+
+        case "V":
+          golonganPPPK.V++;
+          break;
+
+        case "VI":
+          golonganPPPK.VI++;
+          break;
+
+        case "VII":
+          golonganPPPK.VII++;
+          break;
+
+        case "IX":
+          golonganPPPK.IX++;
+          break;
+
+        case "X":
+          golonganPPPK.X++;
+          break;
+
+        case "XI":
+          golonganPPPK.XI++;
+          break;
+      }
+    }
     /*
      * PENDIDIKAN
      */
@@ -593,11 +607,11 @@ export default function DashboardClient({ dataPegawai }: Props) {
   });
 
   filteredData.forEach((p) => {
-    if (p.status_kepegawaian !== "PNS") return;
+    const jabatan = String(p.jabatan || "").trim();
 
-    const jabatan = p.jabatan || "";
-
-    if (!PELAKSANA.includes(jabatan)) return;
+    if (!PELAKSANA.includes(jabatan)) {
+      return;
+    }
 
     if (SATPEL_DAERAH.includes(p.bidang)) {
       pelaksanaStats[jabatan].satpel++;
@@ -719,7 +733,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
         <div className="absolute bottom-0 right-[20%] w-[350px] h-[350px] bg-emerald-300/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative max-w-[1600px] mx-auto px-4 md:px-6 lg:px-10 py-6 lg:py-8">
+      <div className="relative max-w-[1600px] mx-auto px-4 md:px-6 lg:px-24 py-6 lg:py-8">
         {/* =====================================================
             HEADER
         ===================================================== */}
@@ -738,6 +752,9 @@ export default function DashboardClient({ dataPegawai }: Props) {
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight">Dashboard SDM</h1>
 
                 <p className="mt-2 text-blue-100 max-w-2xl text-sm md:text-base">Pusat analitik dan monitoring sumber daya manusia secara real-time.</p>
+                <Link href="/login" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur mt-4">
+                  <span className="text-[10px] font-black uppercase tracking-[.2em]">➡️ Masuk sebagai Administrator</span>
+                </Link>
               </div>
 
               {/* HEALTH SCORE */}
@@ -816,7 +833,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
         ===================================================== */}
 
         <section className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
-          <KpiCard title="Total Pegawai" value={totalPegawai} subtitle="Pegawai terdata" icon="👥" gradient="from-[#15406A] to-[#2876ad]" />
+          <KpiCard title="Total Pegawai" value={totalPegawai} subtitle="Pegawai terdata" icon="👥" gradient="from-[#15406A] to-[#2876ad]" onClick={() => openDataPegawai("")} />
 
           <KpiCard title="PNS" value={totalPNS} subtitle={`${persen(totalPNS)}% dari total`} icon="🛡️" gradient="from-emerald-500 to-teal-600" onClick={() => openDetail("status", "PNS")} />
 
@@ -988,7 +1005,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
               {(showAllLeave ? cutiWatchlist : cutiWatchlist.slice(0, 6)).map((item, index) => (
                 <div key={`${item.nama}-${index}`} className="group p-3 rounded-2xl bg-sky-50/70 border border-sky-100 hover:bg-sky-100 transition">
                   <div className="flex justify-between gap-3">
-                    <Link href={`/admin/data-pegawai/${item.id}`}>
+                    <Link href={`admin/data-pegawai/${item.id}`}>
                       <p className="text-xs font-black truncate">{item.nama}</p>
 
                       <p className="text-[9px] text-slate-500 truncate mt-1">{item.jabatan}</p>
@@ -1031,7 +1048,6 @@ export default function DashboardClient({ dataPegawai }: Props) {
             <SectionTitle color="pink" title="Komposisi Gender" subtitle="Berdasarkan digit NIP ASN." />
 
             <div className="flex gap-4 mt-8">
-              <GenderCard label="Laki-Laki" value={gender.laki} percentage={totalASN ? Math.round((gender.laki / totalASN) * 100) : 0} icon="♂" color="blue" />
               <GenderCard label="Laki-Laki" value={gender.laki} percentage={totalASN ? Math.round((gender.laki / totalASN) * 100) : 0} icon="♂" color="blue" onClick={() => openDetail("gender", "L")} />
 
               <GenderCard label="Perempuan" value={gender.perempuan} percentage={totalASN ? Math.round((gender.perempuan / totalASN) * 100) : 0} icon="♀" color="pink" onClick={() => openDetail("gender", "P")} />
@@ -1073,7 +1089,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
             {(showAllRetirement ? pensiunWatchlist : pensiunWatchlist.slice(0, 6)).map((item, index) => (
               <div key={`${item.nama}-${index}`} className="group rounded-2xl border border-red-100 bg-red-50/50 p-4 hover:bg-red-50 hover:-translate-y-1 transition-all">
                 <div className="flex justify-between gap-3">
-                  <Link href={`/admin/data-pegawai/${item.id}`} className="transition-colors group cursor-pointer border border-transparent ">
+                  <Link href={`admin/data-pegawai/${item.id}`} className="transition-colors group cursor-pointer border border-transparent ">
                     <p className="font-black text-sm truncate">{item.nama}</p>
 
                     <p className="text-[10px] text-slate-500 truncate mt-1">{item.jabatan}</p>
@@ -1143,7 +1159,7 @@ export default function DashboardClient({ dataPegawai }: Props) {
                 const height = (value / max) * 100;
 
                 return (
-                  <div key={label} className="flex-1 h-full flex flex-col justify-end items-center group cursor-pointer" onClick={() => openDetail("golongan", label)}>
+                  <div key={label} className="flex-1 h-full flex flex-col justify-end items-center group cursor-pointer" onClick={() => openDetail("golongan-pppk", label)}>
                     {/* AREA BATANG */}
                     <div className="relative w-full h-full flex items-end justify-center">
                       {/* TOOLTIP */}
