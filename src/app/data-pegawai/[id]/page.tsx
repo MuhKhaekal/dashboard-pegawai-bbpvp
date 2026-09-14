@@ -75,7 +75,7 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
   // 3. TRANSFORMASI DATA (Pemisah Tahunan & Lainnya)
   // ==========================================
   const groupedLeaves: GroupedLeaves = {};
-  
+
   cRows.forEach((row) => {
     const c = row as unknown as LeaveRecord;
     const year = c.tahun || currentYear;
@@ -93,7 +93,7 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
     }
 
     const durasiItem = Number(c.durasi || 0);
-    
+
     // Klasifikasi
     if (isTahunan) {
       groupedLeaves[year].tahunan[month].push(c);
@@ -104,7 +104,9 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
     }
   });
 
-  const availableYears = Object.keys(groupedLeaves).map(Number).sort((a, b) => b - a);
+  const availableYears = Object.keys(groupedLeaves)
+    .map(Number)
+    .sort((a, b) => b - a);
 
   return (
     <div className="p-4 md:p-6 md:px-24 mx-auto space-y-6 bg-slate-50 min-h-screen">
@@ -133,17 +135,14 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
         ==================================================
       */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 delay-100 animate-fade-up">
-        
         {/* KARTU PROFIL (TMT Sudah Ditambahkan) */}
         <div className="bento-card lg:col-span-2 p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-10 opacity-60"></div>
-          
+
           <div className="shrink-0">
-            <div className="w-24 h-24 bg-gradient-to-br from-[#15406A] to-blue-800 rounded-full flex items-center justify-center font-black text-4xl text-white shadow-lg border-4 border-white">
-              {p.nama?.substring(0, 1).toUpperCase()}
-            </div>
+            <div className="w-24 h-24 bg-gradient-to-br from-[#15406A] to-blue-800 rounded-full flex items-center justify-center font-black text-4xl text-white shadow-lg border-4 border-white">{p.nama?.substring(0, 1).toUpperCase()}</div>
           </div>
-          
+
           <div className="flex-1 text-center sm:text-left space-y-3 w-full">
             <div>
               <div className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded-md mb-2">
@@ -152,7 +151,7 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
               <h2 className="text-xl font-black text-slate-800 leading-tight">{p.nama}</h2>
               <p className="text-slate-500 font-mono text-sm mt-0.5">{p.nip}</p>
             </div>
-            
+
             {/* GRID DATA PROFIL TERMASUK TMT */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-3 pt-3 border-t border-slate-100">
               <div className="sm:col-span-1">
@@ -169,7 +168,9 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
               </div>
               <div className="sm:col-span-3">
                 <span className="block text-[10px] text-slate-400 font-bold uppercase">Tempat, Tanggal Lahir</span>
-                <span className="text-sm font-semibold text-slate-700">{p.tempat_lahir || "-"}, {formatTanggalLengkap(p.tanggal_lahir)}</span>
+                <span className="text-sm font-semibold text-slate-700">
+                  {p.tempat_lahir || "-"}, {formatTanggalLengkap(p.tanggal_lahir)}
+                </span>
               </div>
             </div>
           </div>
@@ -179,7 +180,9 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
         <div className="bento-card lg:col-span-1 p-6 bg-[#15406A] flex flex-col justify-between border-none relative overflow-hidden text-slate-800">
           <div>
             <h3 className=" text-xs font-bold uppercase tracking-wider mb-1">Kuota Tahunan ({currentYear})</h3>
-            <div className="text-4xl font-black">{totalKuotaMain} <span className="text-lg font-medium">Hari</span></div>
+            <div className="text-4xl font-black">
+              {totalKuotaMain} <span className="text-lg font-medium">Hari</span>
+            </div>
           </div>
           <div className="mt-4 pt-4 border-t border-blue-800/50 flex justify-between text-sm">
             <div>
@@ -194,13 +197,9 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
         </div>
 
         {/* KARTU STATUS MASA JABATAN */}
-        <div className={`bento-card lg:col-span-1 p-6 flex flex-col justify-between ${
-          !tglLahirDate ? 'bg-slate-50' : (sisaTahunPensiun <= 0 ? 'bg-red-50' : sisaTahunPensiun <= 1 ? 'bg-orange-50' : 'bg-emerald-50')
-        }`}>
+        <div className={`bento-card lg:col-span-1 p-6 flex flex-col justify-between ${!tglLahirDate ? "bg-slate-50" : sisaTahunPensiun <= 0 ? "bg-red-50" : sisaTahunPensiun <= 1 ? "bg-orange-50" : "bg-emerald-50"}`}>
           <div>
-            <h3 className={`text-xs font-bold uppercase tracking-wider mb-1 ${!tglLahirDate ? 'text-slate-500' : 'text-slate-600'}`}>
-              Sisa Masa Jabatan
-            </h3>
+            <h3 className={`text-xs font-bold uppercase tracking-wider mb-1 ${!tglLahirDate ? "text-slate-500" : "text-slate-600"}`}>Sisa Masa Jabatan</h3>
             <div className="text-3xl font-black mt-2 text-slate-800">
               {tglLahirDate ? (sisaTahunPensiun <= 0 ? "Pensiun" : `${sisaTahunPensiun}`) : "-"}
               {tglLahirDate && sisaTahunPensiun > 0 && <span className="text-lg font-medium text-slate-600 ml-1">Thn</span>}
@@ -224,9 +223,7 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
             <h2 className="text-lg font-black text-slate-800">Matriks Cuti Kategorial</h2>
             <p className="text-sm text-slate-500 mt-1">Arahkan kursor pada lencana angka untuk melihat keterangan detail tanpa terpotong batas tabel.</p>
           </div>
-          <div className="text-[10px] font-bold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg border border-slate-200">
-            Total {cRows.length} Riwayat
-          </div>
+          <div className="text-[10px] font-bold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg border border-slate-200">Total {cRows.length} Riwayat</div>
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
@@ -236,7 +233,9 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
                 <th className="px-4 py-3 font-bold text-slate-700 w-20 border-r border-slate-200 text-center">Tahun</th>
                 <th className="px-4 py-3 font-bold text-slate-700 w-32 border-r border-slate-200">Jenis Cuti</th>
                 {DAFTAR_BULAN_SHORT.map((b) => (
-                  <th key={b} className="px-1.5 py-3 text-center font-bold text-slate-500 text-xs uppercase w-12">{b}</th>
+                  <th key={b} className="px-1.5 py-3 text-center font-bold text-slate-500 text-xs uppercase w-12">
+                    {b}
+                  </th>
                 ))}
                 <th className="px-4 py-3 text-center font-bold text-slate-700 bg-slate-100 border-l border-slate-200 w-24">Total</th>
               </tr>
@@ -258,41 +257,39 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
                         <td rowSpan={2} className="px-4 py-4 font-black text-slate-800 border-r border-b border-slate-200 text-center text-lg align-middle bg-slate-50/50">
                           {year}
                         </td>
-                        <td className="px-4 py-3 text-xs font-bold text-[#15406A] border-r border-slate-100 bg-blue-50/30">
-                          Tahunan
-                        </td>
-                        
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
+                        <td className="px-4 py-3 text-xs font-bold text-[#15406A] border-r border-slate-100 bg-blue-50/30">Tahunan</td>
+
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
                           <td key={`tahunan-${m}`} className="px-1 py-2 text-center border-r border-slate-50">
                             {data.tahunan[m].length > 0 ? (
                               <div className="flex flex-col gap-1 items-center justify-center">
                                 {data.tahunan[m].map((item, idx) => (
-                                  <span 
-                                    key={idx} 
+                                  <span
+                                    key={idx}
                                     // Atribut TITLE native untuk menghindari isu tooltip terpotong
-                                    title={`Keterangan: ${item.keterangan || '-'}\nInput: ${formatTanggalHistory(item.created_at)}`}
+                                    title={`Keterangan: ${item.keterangan || "-"}\nInput: ${formatTanggalHistory(item.created_at)}`}
                                     className="inline-flex cursor-help items-center justify-center bg-blue-100 text-blue-700 border border-blue-200 font-bold w-7 h-7 rounded text-xs shadow-sm hover:bg-blue-600 hover:text-white transition-colors"
                                   >
                                     {item.durasi}
                                   </span>
                                 ))}
                               </div>
-                            ) : <span className="text-slate-200">-</span>}
+                            ) : (
+                              <span className="text-slate-200">-</span>
+                            )}
                           </td>
                         ))}
-                        
+
                         <td className="px-4 py-3 text-center bg-blue-50/50 border-l border-slate-200">
-                           <span className="font-black text-[#15406A] text-sm">{data.totalTahunan}</span>
+                          <span className="font-black text-[#15406A] text-sm">{data.totalTahunan}</span>
                         </td>
                       </tr>
 
                       {/* BARIS 2: CUTI LAINNYA (Sakit, Melahirkan, dll) */}
                       <tr className="border-b border-slate-200 hover:bg-orange-50/20 transition-colors">
-                        <td className="px-4 py-3 text-xs font-bold text-orange-700 border-r border-slate-100 bg-orange-50/30">
-                          Lainnya
-                        </td>
-                        
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
+                        <td className="px-4 py-3 text-xs font-bold text-orange-700 border-r border-slate-100 bg-orange-50/30">Lainnya</td>
+
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
                           <td key={`lainnya-${m}`} className="px-1 py-2 text-center border-r border-slate-50">
                             {data.lainnya[m].length > 0 ? (
                               <div className="flex flex-col gap-1 items-center justify-center">
@@ -301,15 +298,24 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
                                   const jt = item.jenis_cuti.toLowerCase();
                                   let bgClass = "bg-slate-100 text-slate-700 border-slate-200";
                                   let label = "L";
-                                  if (jt.includes('sakit')) { bgClass = "bg-orange-100 text-orange-700 border-orange-200"; label = "S"; }
-                                  else if (jt.includes('melahirkan')) { bgClass = "bg-pink-100 text-pink-700 border-pink-200"; label = "M"; }
-                                  else if (jt.includes('penting')) { bgClass = "bg-purple-100 text-purple-700 border-purple-200"; label = "P"; }
-                                  else if (jt.includes('izin')) { bgClass = "bg-teal-100 text-teal-700 border-teal-200"; label = "I"; }
+                                  if (jt.includes("sakit")) {
+                                    bgClass = "bg-orange-100 text-orange-700 border-orange-200";
+                                    label = "S";
+                                  } else if (jt.includes("melahirkan")) {
+                                    bgClass = "bg-pink-100 text-pink-700 border-pink-200";
+                                    label = "M";
+                                  } else if (jt.includes("penting")) {
+                                    bgClass = "bg-purple-100 text-purple-700 border-purple-200";
+                                    label = "P";
+                                  } else if (jt.includes("izin")) {
+                                    bgClass = "bg-teal-100 text-teal-700 border-teal-200";
+                                    label = "I";
+                                  }
 
                                   return (
-                                    <span 
-                                      key={idx} 
-                                      title={`Jenis: ${item.jenis_cuti}\nKeterangan: ${item.keterangan || '-'}\nInput: ${formatTanggalHistory(item.created_at)}`}
+                                    <span
+                                      key={idx}
+                                      title={`Jenis: ${item.jenis_cuti}\nKeterangan: ${item.keterangan || "-"}\nInput: ${formatTanggalHistory(item.created_at)}`}
                                       className={`inline-flex cursor-help items-center justify-center font-bold px-1.5 py-1 border rounded text-[10px] shadow-sm hover:opacity-80 transition-opacity ${bgClass} whitespace-nowrap`}
                                     >
                                       {item.durasi} <span className="opacity-60 ml-0.5">({label})</span>
@@ -317,12 +323,14 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
                                   );
                                 })}
                               </div>
-                            ) : <span className="text-slate-200">-</span>}
+                            ) : (
+                              <span className="text-slate-200">-</span>
+                            )}
                           </td>
                         ))}
-                        
+
                         <td className="px-4 py-3 text-center bg-orange-50/50 border-l border-slate-200">
-                           <span className="font-black text-orange-700 text-sm">{data.totalLainnya}</span>
+                          <span className="font-black text-orange-700 text-sm">{data.totalLainnya}</span>
                         </td>
                       </tr>
                     </Fragment>
@@ -357,7 +365,6 @@ export default async function DetailPegawaiPage({ params }: { params: Promise<{ 
             <span className="font-medium text-slate-600">Lain-lain</span>
           </div>
         </div>
-        
       </div>
     </div>
   );
