@@ -120,6 +120,153 @@ const DAFTAR_PANGKAT = [
   "XI",
 ];
 
+const URUTAN_GOLONGAN_PNS: Record<string, number> = {
+  "IV/E": 1,
+  "IV/D": 2,
+  "IV/C": 3,
+  "IV/B": 4,
+  "IV/A": 5,
+
+  "III/D": 6,
+  "III/C": 7,
+  "III/B": 8,
+  "III/A": 9,
+
+  "II/D": 10,
+  "II/C": 11,
+  "II/B": 12,
+  "II/A": 13,
+
+  "I/D": 14,
+  "I/C": 15,
+  "I/B": 16,
+  "I/A": 17,
+};
+
+const URUTAN_GOLONGAN_PPPK: Record<string, number> = {
+  IX: 1,
+  VIII: 2,
+  VII: 3,
+  VI: 4,
+  V: 5,
+  IV: 6,
+  III: 7,
+  II: 8,
+  I: 9,
+};
+
+function getGolonganPns(pangkatGolongan: string): number {
+  const match = pangkatGolongan
+    .trim()
+    .toUpperCase()
+    .match(/\b(IV|III|II|I)\/([A-E])\b/);
+
+  if (!match) {
+    return 999;
+  }
+
+  const golongan = `${match[1]}/${match[2]}`;
+
+  return URUTAN_GOLONGAN_PNS[golongan] ?? 999;
+}
+
+function getGolonganPppk(pangkatGolongan: string): number {
+  const match = pangkatGolongan
+    .trim()
+    .toUpperCase()
+    .match(/\b(IX|VIII|VII|VI|V|IV|III|II|I)\b/);
+
+  if (!match) {
+    return 999;
+  }
+
+  return URUTAN_GOLONGAN_PPPK[match[1]] ?? 999;
+}
+
+const URUTAN_JABATAN_STRUKTURAL: Record<string, number> = {
+  "kepala bbpvp makassar": 1,
+  "kabag umum": 2,
+};
+
+function normalisasiStatus(status: string): string {
+  return status.trim().toUpperCase();
+}
+
+function normalisasiJabatan(jabatan: string): string {
+  return jabatan.trim().toLowerCase();
+}
+
+function bandingkanPegawai(a: Pegawai, b: Pegawai, bidang: string): number {
+  const statusA = normalisasiStatus(a.status_kepegawaian);
+  const statusB = normalisasiStatus(b.status_kepegawaian);
+
+  const jabatanA = normalisasiJabatan(a.jabatan);
+  const jabatanB = normalisasiJabatan(b.jabatan);
+
+  // ============================================================
+  // KHUSUS BIDANG STRUKTURAL
+  // ============================================================
+  if (bidang.trim().toLowerCase() === "struktural") {
+    const prioritasJabatanA = URUTAN_JABATAN_STRUKTURAL[jabatanA] ?? 999;
+
+    const prioritasJabatanB = URUTAN_JABATAN_STRUKTURAL[jabatanB] ?? 999;
+
+    if (prioritasJabatanA !== prioritasJabatanB) {
+      return prioritasJabatanA - prioritasJabatanB;
+    }
+  }
+
+  // ============================================================
+  // PRIORITAS STATUS
+  // ============================================================
+  const getPrioritasStatus = (status: string, jabatan: string): number => {
+    if (status === "PNS") return 0;
+    if (status === "PPPK") return 1;
+    if (jabatan === "pramubakti") return 2;
+    if (jabatan === "-") return 3;
+
+    return 4;
+  };
+
+  const prioritasA = getPrioritasStatus(statusA, jabatanA);
+  const prioritasB = getPrioritasStatus(statusB, jabatanB);
+
+  if (prioritasA !== prioritasB) {
+    return prioritasA - prioritasB;
+  }
+
+  // ============================================================
+  // PNS → GOLONGAN TERTINGGI KE TERENDAH
+  // ============================================================
+  if (statusA === "PNS" && statusB === "PNS") {
+    const golonganA = getGolonganPns(a.pangkat_golongan);
+    const golonganB = getGolonganPns(b.pangkat_golongan);
+
+    if (golonganA !== golonganB) {
+      return golonganA - golonganB;
+    }
+  }
+
+  // ============================================================
+  // PPPK → GOLONGAN IX KE I
+  // ============================================================
+  if (statusA === "PPPK" && statusB === "PPPK") {
+    const golonganA = getGolonganPppk(a.pangkat_golongan);
+    const golonganB = getGolonganPppk(b.pangkat_golongan);
+
+    if (golonganA !== golonganB) {
+      return golonganA - golonganB;
+    }
+  }
+
+  // ============================================================
+  // TERAKHIR → NAMA
+  // ============================================================
+  return a.nama.localeCompare(b.nama, "id", {
+    sensitivity: "base",
+  });
+}
+
 function formatTanggal(dateString: string | null) {
   if (!dateString) return "-";
   const date = new Date(dateString);
@@ -127,43 +274,87 @@ function formatTanggal(dateString: string | null) {
 }
 
 // FUNGSI KALKULASI MASA PENSIUN
-function hitungMasaPensiun(tanggalLahir: string | null, jabatan: string, status: string) {
-  if (!tanggalLahir) return { batasUmur: 0, sisaTeks: "Data TTL Kosong", isPensiun: false, warna: "bg-gray-100 text-gray-600" };
+function hitungMasaPensiun(tanggalLahir: string | null, jabatan: string, _status: string) {
+  if (!tanggalLahir) {
+    return {
+      batasUmur: 0,
+      sisaTeks: "Data TTL Kosong",
+      isPensiun: false,
+      warna: "bg-gray-100 text-gray-600",
+    };
+  }
+
+  const namaJabatan = jabatan.trim().toLowerCase();
 
   let batasUmur = 58;
 
-  if (status !== "PPPK") {
-    if (jabatan.includes("Utama")) {
-      batasUmur = 65;
-    } else if (jabatan.includes("Madya") || jabatan === "Kepala BBPVP Makassar") {
-      batasUmur = 60;
-    }
+  /*
+   * BUP:
+   * - Instruktur Ahli Utama = 65 tahun
+   * - Instruktur + Ahli selain Utama = 60 tahun
+   * - Selain itu = 58 tahun
+   */
+  if (namaJabatan === "instruktur ahli utama") {
+    batasUmur = 65;
+  } else if (namaJabatan.includes("instruktur") && namaJabatan.includes("ahli")) {
+    batasUmur = 60;
   }
 
   const tglLahirDate = new Date(tanggalLahir);
+
+  if (Number.isNaN(tglLahirDate.getTime())) {
+    return {
+      batasUmur,
+      sisaTeks: "Tanggal Tidak Valid",
+      isPensiun: false,
+      warna: "bg-gray-100 text-gray-600",
+    };
+  }
+
   const tglPensiun = new Date(tglLahirDate.getFullYear() + batasUmur, tglLahirDate.getMonth(), tglLahirDate.getDate());
+
   const now = new Date();
 
   let diffMonths = (tglPensiun.getFullYear() - now.getFullYear()) * 12 + (tglPensiun.getMonth() - now.getMonth());
+
   if (now.getDate() > tglPensiun.getDate()) {
     diffMonths--;
   }
 
   if (diffMonths <= 0) {
-    return { batasUmur, sisaTeks: "Sudah Pensiun", isPensiun: true, warna: "bg-red-100 text-red-700 border-red-200" };
+    return {
+      batasUmur,
+      sisaTeks: "Sudah Pensiun",
+      isPensiun: true,
+      warna: "bg-red-100 text-red-700 border-red-200",
+    };
   }
 
   const sisaTahun = Math.floor(diffMonths / 12);
   const sisaBulan = diffMonths % 12;
 
   let sisaTeks = "";
-  if (sisaTahun > 0) sisaTeks += `${sisaTahun} Thn `;
-  if (sisaBulan > 0) sisaTeks += `${sisaBulan} Bln`;
-  if (sisaTeks === "") sisaTeks = "< 1 Bln";
+
+  if (sisaTahun > 0) {
+    sisaTeks += `${sisaTahun} Thn `;
+  }
+
+  if (sisaBulan > 0) {
+    sisaTeks += `${sisaBulan} Bln`;
+  }
+
+  if (sisaTeks === "") {
+    sisaTeks = "< 1 Bln";
+  }
 
   const warna = sisaTahun < 1 ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-emerald-50 text-emerald-700 border-emerald-200";
 
-  return { batasUmur, sisaTeks: sisaTeks.trim(), isPensiun: false, warna };
+  return {
+    batasUmur,
+    sisaTeks: sisaTeks.trim(),
+    isPensiun: false,
+    warna,
+  };
 }
 
 export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
@@ -194,11 +385,24 @@ export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
   });
 
   const groupedData: Record<string, Pegawai[]> = {};
+
   filteredData.forEach((p) => {
     let bidang = p.bidang;
-    if (bidang.includes("--")) bidang = bidang.replace("-- ", "");
-    if (!groupedData[bidang]) groupedData[bidang] = [];
+
+    if (bidang.includes("--")) {
+      bidang = bidang.replace("-- ", "");
+    }
+
+    if (!groupedData[bidang]) {
+      groupedData[bidang] = [];
+    }
+
     groupedData[bidang].push(p);
+  });
+
+  // Sorting pegawai di dalam masing-masing bidang
+  Object.keys(groupedData).forEach((bidang) => {
+    groupedData[bidang].sort((a, b) => bandingkanPegawai(a, b, bidang));
   });
 
   const sortedBidangKeys = Object.keys(groupedData).sort((a, b) => {
@@ -209,12 +413,9 @@ export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
 
   return (
     <>
-
-
       {/* TABEL UTAMA */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="p-5 border-b border-gray-100 bg-white md:flex-row justify-between items-center gap-4">
-
           <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
             {/* SEARCH */}
             <div className="relative w-full md:w-full">
@@ -350,7 +551,7 @@ export default function TabelPegawaiClient({ data }: { data: Pegawai[] }) {
                           {/* KOLOM 1: IDENTITAS */}
                           <td className="px-4 py-2.5 align-top">
                             <Link
-                              href={`/admin/data-pegawai/${p.id}`}
+                              href={`data-pegawai/${p.id}`}
                               className="flex flex-col leading-tight hover:bg-[#15406A]/5 p-2 -ml-2 rounded-xl transition-colors group cursor-pointer border border-transparent hover:border-[#15406A]/10"
                               title="Lihat Detail Pegawai"
                             >
