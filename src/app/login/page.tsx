@@ -52,15 +52,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         {/* --- BAGIAN LOGO --- */}
         <div className="flex flex-col items-center justify-center mb-8">
           <div className="w-24 h-24 mb-4 relative flex items-center justify-center bg-gradient-to-tr from-gray-50 to-gray-100 rounded-3xl shadow-inner border border-gray-200 overflow-hidden group">
-            {/* 
-              TIPS MENAMBAHKAN LOGO ASLI:
-              1. Simpan file logo Anda di dalam folder `public` (misal: public/logo-bbpvp.png)
-              2. Hapus komentar dan elemen <svg> di bawah ini, lalu aktifkan tag <img> ini:
 
-            */}
 
             {/* Placeholder Ikon Logo (Hapus ini jika sudah pakai <img> asli) */}
-            <img src="/logo-bbpvp.png" alt="Logo BBPVP Makassar" className="w-full h-full object-contain p-2" />
+            <img src="/logo-bbpvp-makassar.png" alt="Logo BBPVP Makassar" className="w-full h-full object-contain p-2" />
           </div>
 
           <h1 className="text-2xl font-black text-[#15406A] tracking-tight">PORTAL ADMIN</h1>

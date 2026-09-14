@@ -28,11 +28,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* LOGO SIDEBAR (Diberi background putih agar logo biru terlihat jelas) */}
             <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white rounded-xl flex items-center justify-center shadow-lg p-1.5 shrink-0">
               {/* Pastikan file logo Anda bernama logo-bbpvp.png dan berada di folder 'public' */}
-              <img
-                src="/logo-bbpvp.png"
-                alt="Logo BBPVP Makassar"
-                className="w-full h-full object-contain"
-              />
+              <img src="/logo-bbpvp-makassar.png" alt="Logo BBPVP Makassar" className="w-full h-full object-contain" />
+              
             </div>
 
             <div>

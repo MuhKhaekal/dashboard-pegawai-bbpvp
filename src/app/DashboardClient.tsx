@@ -739,46 +739,101 @@ export default function DashboardClient({ dataPegawai }: Props) {
         ===================================================== */}
 
         <section className="dashboard-card mb-6">
-          <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#0f3557] via-[#15406A] to-[#1d5d91] p-6 md:p-8 lg:p-10 text-white shadow-2xl">
-            <div className="absolute right-0 top-0 w-80 h-80 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/3" />
-            <div className="absolute bottom-0 left-1/3 w-64 h-64 rounded-full bg-blue-300/10 translate-y-1/2" />
+          <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#0f3557] via-[#15406A] to-[#1d5d91] shadow-2xl">
+            {/* Background Decoration */}
+            <div className="absolute -right-24 -top-24 w-80 h-80 rounded-full bg-white/[0.04]" />
+            <div className="absolute -left-20 -bottom-32 w-72 h-72 rounded-full bg-blue-300/[0.06]" />
+            <div className="absolute right-1/3 bottom-0 w-40 h-40 rounded-full bg-white/[0.03]" />
 
-            <div className="relative z-10 flex flex-col lg:flex-row justify-between gap-8">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur mb-4">
-                  <span className="text-[10px] font-black uppercase tracking-[.2em]">Balai Besar Pelatihan Produktivitas dan Vokasi Makassar</span>
-                </div>
+            <div className="relative z-10">
+              {/* ===================================================== */}
+              {/* INSTITUTION HEADER */}
+              {/* ===================================================== */}
+              <div className="px-6 pt-6 md:px-8 md:pt-8 lg:px-10 lg:pt-8">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  {/* LOGO AREA */}
+                  <div className="inline-flex items-center gap-3 w-fit rounded-2xl bg-white px-4 py-3 shadow-lg ring-1 ring-black/5">
+                    {/* Logo Kementerian */}
+                    <div className="flex items-center justify-center w-14 h-14">
+                      <img src="logo-kemnaker.png" alt="Logo Kementerian Ketenagakerjaan Republik Indonesia" className="max-w-full max-h-full object-contain" />
+                    </div>
 
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight">Dashboard SDM</h1>
+                    {/* Divider */}
+                    <div className="w-px h-10 bg-gray-200" />
 
-                <p className="mt-2 text-blue-100 max-w-2xl text-sm md:text-base">Pusat analitik dan monitoring sumber daya manusia secara real-time.</p>
-                <Link href="/login" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur mt-4">
-                  <span className="text-[10px] font-black uppercase tracking-[.2em]">➡️ Masuk sebagai Administrator</span>
-                </Link>
-              </div>
-
-              {/* HEALTH SCORE */}
-
-              <div className="floating flex items-center gap-5 bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl px-5 py-4 self-start">
-                <div className="relative w-20 h-20">
-                  <div
-                    className="w-20 h-20 rounded-full flex items-center justify-center"
-                    style={{
-                      background: `conic-gradient(#34d399 0% ${healthScore}%, rgba(255,255,255,.12) ${healthScore}% 100%)`,
-                    }}
-                  >
-                    <div className="w-14 h-14 rounded-full bg-[#15406A] flex items-center justify-center">
-                      <span className="text-xl font-black">{healthScore}</span>
+                    {/* Logo BBPVP */}
+                    <div className="flex items-center justify-center w-14 h-14">
+                      <img src="logo-bbpvp-makassar.png" alt="Logo BBPVP Makassar" className="max-w-full max-h-full object-contain" />
                     </div>
                   </div>
+
+                  {/* INSTITUTION NAME */}
+                  <div className="sm:ml-1">
+                    <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.18em] text-blue-200">Kementerian Ketenagakerjaan Republik Indonesia</p>
+
+                    <h2 className="mt-1 text-sm md:text-base font-bold text-white">Balai Besar Pelatihan Produktivitas dan Vokasi Makassar</h2>
+                  </div>
                 </div>
+              </div>
 
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-blue-200 font-bold">HR Health Score</p>
+              {/* ===================================================== */}
+              {/* MAIN HEADER CONTENT */}
+              {/* ===================================================== */}
+              <div className="px-6 pb-7 pt-7 md:px-8 md:pb-8 md:pt-8 lg:px-10 lg:pb-10">
+                <div className="flex flex-col lg:flex-row justify-between gap-8">
+                  {/* LEFT CONTENT */}
+                  <div className="max-w-3xl">
+                    {/* STATUS BADGE */}
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur-md">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                      </span>
 
-                  <p className="text-xl font-black mt-1">{healthLabel}</p>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-100">Sistem Monitoring SDM</span>
+                    </div>
 
-                  <p className="text-[10px] text-blue-200 mt-1">Berdasarkan indikator SDM</p>
+                    {/* TITLE */}
+                    <h1 className="mt-4 text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white">Dashboard SDM</h1>
+
+                    {/* DESCRIPTION */}
+                    <p className="mt-2 max-w-2xl text-sm md:text-base leading-relaxed text-blue-100">Pusat analitik dan monitoring sumber daya manusia secara real-time.</p>
+
+                    {/* ADMIN LOGIN */}
+                    <Link href="/login" className="group inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-xl bg-white text-[#15406A] hover:bg-blue-50 shadow-lg transition-all duration-200">
+                      <span className="text-xs font-bold">Masuk sebagai Administrator</span>
+
+                      <svg className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </Link>
+                  </div>
+
+                  {/* ================================================= */}
+                  {/* HEALTH SCORE */}
+                  {/* ================================================= */}
+                  <div className="floating flex items-center gap-5 bg-white/[0.08] backdrop-blur-xl border border-white/10 rounded-3xl px-5 py-4 self-start lg:min-w-[250px]">
+                    <div className="relative w-20 h-20 shrink-0">
+                      <div
+                        className="w-20 h-20 rounded-full flex items-center justify-center"
+                        style={{
+                          background: `conic-gradient(#34d399 0% ${healthScore}%, rgba(255,255,255,.12) ${healthScore}% 100%)`,
+                        }}
+                      >
+                        <div className="w-14 h-14 rounded-full bg-[#15406A] flex items-center justify-center shadow-inner">
+                          <span className="text-xl font-black text-white">{healthScore}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-blue-200 font-bold">HR Health Score</p>
+
+                      <p className="text-xl font-black text-white mt-1">{healthLabel}</p>
+
+                      <p className="text-[10px] text-blue-200 mt-1">Berdasarkan indikator SDM</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
